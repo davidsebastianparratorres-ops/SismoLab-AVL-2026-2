@@ -1,0 +1,1 @@
+#"master class" for the events that can be registered in the system. This class contains the common attributes of these events
