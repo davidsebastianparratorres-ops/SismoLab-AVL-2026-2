@@ -12,5 +12,4 @@ class BST(Tree):
     def setType(self, type_name):
         self.__type = type_name
 
-    def __str__(self):
-        return f"BST(type={self.__type}, root={self.getRoot()}, size={self.getSize()})"
+    
