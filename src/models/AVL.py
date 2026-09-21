@@ -1,7 +1,7 @@
 from .Tree import Tree
 
 
-class AVL1(Tree):
+class AVL2(Tree):
     def __init__(self, root=None):
         super().__init__(root)
         self.__height = 0
