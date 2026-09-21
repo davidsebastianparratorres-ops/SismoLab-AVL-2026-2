@@ -1,17 +1,18 @@
 class Node:
-    def __init__(self, Event):
-        self.__value = Event
+    def __init__(self, key, event_id):
+        self.__key = key
+        self.__event_id = event_id
         self.__parent = None
         self.__left = None
         self.__right = None
         self.__height = None
         self.__balanceFactor = None
 
-    def getValue(self):
-        return self.__value
+    def getKey(self):
+        return self.__key
 
-    def setValue(self, Event):
-        self.__value = Event
+    def getEventId(self):
+        return self.__event_id
 
     def getParent(self):
         return self.__parent

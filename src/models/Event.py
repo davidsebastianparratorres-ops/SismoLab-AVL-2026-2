@@ -1,8 +1,20 @@
+from controllers.AttetionStaus import AttetionStatus
 from src.models import Point
 # Base class for the sysmic events that can be registered in the system. This class contains the common attributes of these events
 class Event:
     
-    def __init__(self, event_id="", magnitude=0.0, epicenter=Point, depth=0.0, status="", associatedEvents=[], stations="", ocurredAt="", review=0):
+    def __init__(
+        self, 
+        event_id="", 
+        magnitude=float, 
+        epicenter=Point, 
+        depth=float, 
+        status="", 
+        associatedEvents=[], 
+        stations="", 
+        ocurredAt="",
+        priority=int, 
+        review=int):
         self.__event_id = event_id
         self.__magnitude = magnitude
         self.__epicenter = epicenter
@@ -11,6 +23,7 @@ class Event:
         self.__associatedEvents = associatedEvents
         self.__stations = stations
         self.__ocurredAt = ocurredAt
+        self.__priority = priority
         self.__review = review
 
     def getEventId(self):
@@ -66,3 +79,18 @@ class Event:
 
     def setReview(self, review):
         self.__review = review
+    
+    @classmethod
+    def create_new(cls, event_id, magnitude, epicenter, depth, ocurredAt, origin_station_id, priority):
+        return cls(
+            event_id=event_id,
+            magnitude=magnitude,
+            epicenter=epicenter,
+            depth=depth,
+            status=AttetionStatus.PENDING,
+            associatedEvents=[],
+            stations={origin_station_id},
+            ocurredAt=ocurredAt,
+            priority=priority,
+            review=1
+        )
