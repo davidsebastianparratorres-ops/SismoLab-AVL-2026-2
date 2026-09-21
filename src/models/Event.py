@@ -6,21 +6,21 @@ class Event:
     def __init__(
         self, 
         event_id="", 
-        magnitude=float, 
-        epicenter=Point, 
-        depth=float, 
+        magnitude=0.0, 
+        epicenter=None, 
+        depth=0.0, 
         status="", 
-        associatedEvents=[], 
-        stations="", 
+        associatedEvents=None, 
+        stations=set, 
         ocurredAt="",
-        priority=int, 
-        review=int):
+        priority=0, 
+        review=1):
         self.__event_id = event_id
         self.__magnitude = magnitude
-        self.__epicenter = epicenter
+        self.__epicenter = epicenter if epicenter is not None else Point()
         self.__depth = depth
         self.__status = status
-        self.__associatedEvents = associatedEvents
+        self.__associatedEvents = associatedEvents if associatedEvents is not None else []
         self.__stations = stations
         self.__ocurredAt = ocurredAt
         self.__priority = priority
