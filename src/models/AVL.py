@@ -17,7 +17,7 @@ class AVL(Tree):
         return self.__balanceFactor
 
     def setBalanceFactor(self, balanceFactor):
-        self.__balanceFactor = balanceFactor
+            self.__balanceFactor = balanceFactor
 
     def __str__(self):
         return (
