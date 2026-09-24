@@ -1,5 +1,4 @@
-
-from models.Point import Point
+from src.models.Point import Point
 
 def belongs_to_populated_zone(epicenter: Point, zones: list) -> bool:
     for zone in zones:
