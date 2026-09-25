@@ -10,7 +10,7 @@ from src.controllers.ZoneLocator import belongs_to_populated_zone
 
 class Scenery:
     
-    def __init__(self, zones, stations, simulation_clock, tree, undo_stack):
+    def __init__(self, zones, stations, simulation_clock, tree, undo_stack, parameters):
         
         self.zones = zones
         self.stations = stations
@@ -20,6 +20,7 @@ class Scenery:
         self.active_events = []
         self.archived_events = []
         self.eliminated_ids = set()
+        self.parameters = parameters
     
     def create_event(
         self,
@@ -50,7 +51,17 @@ class Scenery:
         is_in_populated_zone = belongs_to_populated_zone(epicenter, self.zones)
         priority = calculate_priority(magnitude, depth, is_in_populated_zone)
         
-        
+    def advance_clock(self, delta):
+        errors = self.simulation_clock.advance(delta)
+        if errors:
+            return OperationResult(False, " ".join(errors))
+        return OperationResult(True, "Clock advanced.")
+
+    def update_parameters(self, w=None, r=None, l=None, t=None):
+         errors = self.parameters.update(w=w, r=r, l=l, t=t)
+         if errors:
+             return OperationResult(False, " ".join(errors))
+         return OperationResult(True, "Parameters updated.")  
 
 
 

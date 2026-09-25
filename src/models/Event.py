@@ -1,4 +1,4 @@
-from src.controllers.AttetionStaus import AttetionStatus
+from src.controllers.AttetionStatus import AttetionStatus
 from src.models.Point import Point
 
 
