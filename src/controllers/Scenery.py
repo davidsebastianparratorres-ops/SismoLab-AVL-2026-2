@@ -7,6 +7,8 @@ from src.controllers.EventValidator import validate_event_input
 from src.controllers.PriorityCalculator import calculate_priority
 from src.controllers.OperationResult import OperationResult
 from src.controllers.ZoneLocator import belongs_to_populated_zone
+from src.controllers.TreeAuditor import TreeAuditor
+from src.models.AuditReport import AuditReport
 
 class Scenery:
     
