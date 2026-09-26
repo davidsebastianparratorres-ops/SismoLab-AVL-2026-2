@@ -54,16 +54,31 @@ class Scenery:
         priority = calculate_priority(magnitude, depth, is_in_populated_zone)
         
     def advance_clock(self, delta):
+        #Advances simulation clock by delta time steps.
         errors = self.simulation_clock.advance(delta)
         if errors:
             return OperationResult(False, " ".join(errors))
-        return OperationResult(True, "Clock advanced.")
+        return OperationResult(True, "Reloj adelantado con éxito.")
 
     def update_parameters(self, w=None, r=None, l=None, t=None):
+         #Updates simulation parameters (W, R, L, T) atomically.
          errors = self.parameters.update(w=w, r=r, l=l, t=t)
          if errors:
              return OperationResult(False, " ".join(errors))
-         return OperationResult(True, "Parameters updated.")  
+         return OperationResult(True, "Parámetros actualizados con éxito.")  
 
-
+    def verify_structure(self, stress_mode: bool = False):
+        #Executes structural verification of the active AVL tree and catalogs (Section 14).
+        #Converts active and archived lists into ID-indexed dictionaries and sets
+       # before delegating evaluation to TreeAuditor.
+        
+          active_by_id = {event.getEventId(): event for event in self.active_events}
+          archived_ids = {event.getEventId() for event in self.archived_events}
+          return TreeAuditor().audit(
+             self.tree.getRoot(),
+             active_by_id,
+             stress_mode=stress_mode,
+             archived_ids=archived_ids,
+             eliminated_ids=self.eliminated_ids,
+             )
 

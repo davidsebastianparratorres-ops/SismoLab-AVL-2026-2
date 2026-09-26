@@ -7,6 +7,7 @@ from src.models.Node import Node
 from src.models.Key import Key
 from src.models.Event import Event
 from src.models.Point import Point
+from src.controllers.TreeAuditor import TreeAuditor
 
 
 class LoadResult:
@@ -34,7 +35,7 @@ class TopologyIO:
     # Load
     # ------------------------------------------------------------------
 
-    def load(self, filepath: str, zones: list) -> LoadResult:
+    def load(self, filepath: str, zones: list, stress_mode: bool = False) -> LoadResult:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -50,8 +51,8 @@ class TopologyIO:
             errors.append(f"Event {orphan_id} exists in 'eventos' but has no node in 'arbol'.")
 
         if not errors:
-            errors.extend(self.__validate_bst_order(root))
-            errors.extend(self.__validate_stored_metadata(root))
+            report = TreeAuditor().audit(root, events, stress_mode=stress_mode)
+            errors.extend(f"[{issue.category}] Evento {issue.event_id}: {issue.message}" for issue in report.errors())
 
         if errors:
             return LoadResult(success=False, errors=errors)
