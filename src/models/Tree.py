@@ -73,3 +73,15 @@ class Tree:
                 current = current.right
             depth += 1
         return None, None, None  # not found — shouldn't happen if get_event said ACTIVE
+    
+    def get_all_depths(self):
+        depths = {}
+        self._collect_depths(self.root, 0, depths)
+        return depths
+
+    def _collect_depths(self, node, depth, depths):
+        if node is None:
+            return
+        depths[node.event_id] = depth
+        self._collect_depths(node.left, depth + 1, depths)
+        self._collect_depths(node.right, depth + 1, depths)

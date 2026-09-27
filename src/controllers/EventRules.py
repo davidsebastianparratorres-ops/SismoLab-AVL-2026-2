@@ -14,3 +14,7 @@ def calculate_priority(magnitude:float, depth:float, is_in_populated_zone:bool) 
     if magnitude >= 4.5:
         return 2
     return 1
+
+def search_cost(event_id, node_depths):
+    depth = node_depths.get(event_id)
+    return None if depth is None else depth + 1

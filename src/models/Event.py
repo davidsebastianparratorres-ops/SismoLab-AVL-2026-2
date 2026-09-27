@@ -11,7 +11,7 @@ class Event:
         event_id=0,
         magnitude=0.0,
         epicenter=None,
-        depth=0.0,
+        depth_km=0.0,
         status=AttetionStatus.PENDING,
         stations=None,
         ocurredAt="",
@@ -20,7 +20,7 @@ class Event:
         self.__event_id = event_id
         self.__magnitude = magnitude
         self.__epicenter = epicenter if epicenter is not None else Point()
-        self.__depth = depth
+        self.__depth_km = depth_km
         self.__status = status
         self.__stations = stations if stations is not None else []
         self.__ocurredAt = ocurredAt
@@ -45,11 +45,11 @@ class Event:
     def setEpicenter(self, epicenter):
         self.__epicenter = epicenter
 
-    def getDepth(self):
-        return self.__depth
+    def getDepth_km(self):
+        return self.__depth_km
 
-    def setDepth(self, depth):
-        self.__depth = depth
+    def setDepth_km(self, depth_km):
+        self.__depth_km = depth_km
 
     def getStatus(self):
         return self.__status
@@ -97,7 +97,7 @@ class Event:
             event_id=event_id,
             magnitude=magnitude,
             epicenter=epicenter,
-            depth=depth,
+            depth_km=depth,
             status=AttetionStatus.PENDING,
             stations=[origin_station_id],
             ocurredAt=ocurredAt,
