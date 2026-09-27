@@ -3,11 +3,12 @@
 from src.models.Key import Key
 from src.models.Point import Point
 from src.models.Event import Event
+from src.controllers.EventLookupResult import EventLookupResult
+from src.controllers.EventStatus import EventStatus
+from src.controllers.AttetionStatus import AttetionStatus
 from src.controllers.EventValidator import validate_event_input
-from src.controllers.PriorityCalculator import calculate_priority
 from src.controllers.OperationResult import OperationResult
-from src.controllers.ZoneLocator import belongs_to_populated_zone
-
+from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
 class Scenery:
     
     def __init__(self, zones, stations, simulation_clock, tree, undo_stack, parameters):
@@ -17,8 +18,8 @@ class Scenery:
         self.simulation_clock = simulation_clock    
         self.tree = tree
         self.undo_stack = undo_stack
-        self.active_events = []
-        self.archived_events = []
+        self.active_events = {}
+        self.archived_events = {}
         self.eliminated_ids = set()
         self.parameters = parameters
     
@@ -62,6 +63,24 @@ class Scenery:
          if errors:
              return OperationResult(False, " ".join(errors))
          return OperationResult(True, "Parameters updated.")  
+    
+    def get_event(self, event_id):
+        if event_id in self.active_events:
+            return EventLookupResult(EventStatus.ACTIVE, self.active_events[event_id])
+        elif event_id in self.archived_events:
+            return EventLookupResult(EventStatus.ARCHIVED, self.archived_events[event_id])
+        elif event_id in self.eliminated_ids:
+            return EventLookupResult(EventStatus.ELIMINATED)
+        else:
+            return EventLookupResult(EventStatus.UNKNOWN)
 
 
+    def mark_as_reviewed(self, event_id):
+     if event_id not in self.active_events:
+        return OperationResult(False, "Event " + str(event_id) + " is not an active event.")
 
+     event = self.active_events[event_id]
+     event.status = AttetionStatus.REVIEWED
+
+        
+        

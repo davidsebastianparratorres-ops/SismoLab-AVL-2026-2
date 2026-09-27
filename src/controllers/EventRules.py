@@ -1,3 +1,10 @@
+from models.Point import Point
+
+def belongs_to_populated_zone(epicenter: Point, zones: list) -> bool:
+    for zone in zones:
+        if zone.contains(epicenter) and zone.populated:
+            return True
+    return False
 
 def calculate_priority(magnitude:float, depth:float, is_in_populated_zone:bool) -> int:
     if magnitude >= 6.0:

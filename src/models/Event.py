@@ -13,7 +13,6 @@ class Event:
         epicenter=None,
         depth=0.0,
         status=AttetionStatus.PENDING,
-        associatedEvents=None,
         stations=None,
         ocurredAt="",
         priority=0, 
@@ -23,7 +22,6 @@ class Event:
         self.__epicenter = epicenter if epicenter is not None else Point()
         self.__depth = depth
         self.__status = status
-        self.__associatedEvents = associatedEvents if associatedEvents is not None else []
         self.__stations = stations if stations is not None else []
         self.__ocurredAt = ocurredAt
         self.__priority = priority
@@ -101,7 +99,6 @@ class Event:
             epicenter=epicenter,
             depth=depth,
             status=AttetionStatus.PENDING,
-            associatedEvents=[],
             stations=[origin_station_id],
             ocurredAt=ocurredAt,
             priority=priority,

@@ -1,7 +1,6 @@
 import json
 
-from src.controllers.PriorityCalculator import calculate_priority
-from src.controllers.ZoneLocator import belongs_to_populated_zone
+from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
 from src.controllers.EventValidator import validate_ranges
 from src.models.Node import Node
 from src.models.Key import Key
