@@ -2,10 +2,10 @@ from datetime import datetime, timedelta, timezone
 
 def parse_iso_utc(text: str) -> datetime:
     
-    #Converts an ISO 8601 string (e.g., 2026-09-07T10:00:00Z) into a timezone-aware UTC datetime.
+    #Converts an ISO 8601 string (f.e., 2026-09-07T10:00:00Z) into a timezone-aware UTC datetime.
     #Raises ValueError if not a string, not ISO 8601, or missing timezone information.
     if not isinstance(text, str):
-        raise ValueError("Date must be an ISO 8601 string.")
+        raise ValueError("La fecha debe ser una cadena con formato ISO 8601.")
     normalized = text.strip()
     # fromisoformat does not parse the trailing "Z" in older Python versions,
     # so it is replaced with its "+00:00" equivalent.
@@ -13,7 +13,7 @@ def parse_iso_utc(text: str) -> datetime:
         normalized = normalized[:-1] + "+00:00"
     value = datetime.fromisoformat(normalized)
     if value.tzinfo is None:
-        raise ValueError("Date must include a timezone (use 'Z' for UTC).")
+        raise ValueError("La fecha debe incluir una zona horaria (use 'Z' para UTC).")
     # Convert to UTC and strip microseconds for second-level precision.
     return value.astimezone(timezone.utc).replace(microsecond=0)
 
@@ -22,7 +22,7 @@ def format_iso_utc(value: datetime) -> str:
     return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 # Explicit simulation clock (Section 3 of the specification).
-# #Only advances when explicitly requested by the user and only moves forward.
+# Only advances when explicitly requested by the user and only moves forward.
 # Undo does not "rewind" the clock: it uses restore() with a snapshot taken beforehand.
     
 class SimulationClock:
@@ -30,7 +30,7 @@ class SimulationClock:
 
     def __init__(self, start_time: datetime):
         if not isinstance(start_time, datetime) or start_time.tzinfo is None:
-            raise ValueError("Clock start time must be a timezone-aware datetime.")
+            raise ValueError("La hora de inicio del reloj debe ser un objeto datetime con información de zona horaria.")
         self._current_time = start_time.astimezone(timezone.utc).replace(microsecond=0)
 
     @property
@@ -41,11 +41,11 @@ class SimulationClock:
     def advance(self, delta: timedelta) -> list:
         # Read-only: can only be modified via advance() or restore().
         if not isinstance(delta, timedelta):
-            return ["Clock advance must be a time interval."]
+            return ["El avance del reloj debe ser un intervalo de tiempo."]
         if delta <= timedelta(0):
-            return ["The clock can only move forward by a positive amount."]
+            return ["El reloj solo puede avanzar una cantidad positiva."]
         if delta.microseconds != 0:
-            return ["The clock advance must be a whole number of seconds."]
+            return ["El avance del reloj debe ser un número entero de segundos."]
         self._current_time = self._current_time + delta
         return []
 
@@ -61,7 +61,7 @@ class SimulationClock:
 
     # Undo || Snapshot state management 
     def copy(self) -> "SimulationClock":
-        """Foto del reloj para guardar en la pila de deshacer."""
+        #Photo of the clock to save in the undo stack.
         return SimulationClock(self._current_time)
 
     def restore(self, snapshot: "SimulationClock") -> None:
@@ -76,8 +76,8 @@ class SimulationClock:
     def from_dict(data) -> tuple:
         #Returns a tuple (clock, errors). If errors exist, clock is None.
         if not isinstance(data, dict) or "current_time" not in data:
-            return None, ["Clock section must contain 'current_time'."]
+            return None, ["La sección del reloj debe contener 'current_time'."]
         try:
             return SimulationClock(parse_iso_utc(data["current_time"])), []
         except ValueError as error:
-            return None, ["Invalid clock time: " + str(error)]
+            return None, [" Hora no válida: " + str(error)]

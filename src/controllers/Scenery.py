@@ -53,12 +53,14 @@ class Scenery:
         priority = calculate_priority(magnitude, depth, is_in_populated_zone)
         
     def advance_clock(self, delta):
+        #Advances simulation clock by delta time steps.
         errors = self.simulation_clock.advance(delta)
         if errors:
             return OperationResult(False, " ".join(errors))
-        return OperationResult(True, "Clock advanced.")
+        return OperationResult(True, "Reloj adelantado con éxito.")
 
     def update_parameters(self, w=None, r=None, l=None, t=None):
+         #Updates simulation parameters (W, R, L, T) atomically.
          errors = self.parameters.update(w=w, r=r, l=l, t=t)
          if errors:
              return OperationResult(False, " ".join(errors))
