@@ -88,7 +88,7 @@ class EventQueries:
 
         def matches(event):
             occurred_at = _as_datetime(event.getOcurredAt())
-            return event.getDepth() <= depth_limit and date_min <= occurred_at <= date_max
+            return event.getDepth_km() <= depth_limit and date_min <= occurred_at <= date_max
 
         return self.__full_scan(root, active_events, matches)
 

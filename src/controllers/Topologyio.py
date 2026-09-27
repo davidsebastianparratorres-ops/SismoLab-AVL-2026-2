@@ -191,7 +191,7 @@ class TopologyIO:
         return {
             str(event_id): {
                 "magnitude": event.getMagnitude(),
-                "depth": event.getDepth(),
+                "depth": event.getDepth_km(),
                 "epicenter": {"x": event.getEpicenter().getX(), "y": event.getEpicenter().getY()},
                 "status": event.getStatus(),
                 "associatedEvents": list(event.getAssociatedEvents()),

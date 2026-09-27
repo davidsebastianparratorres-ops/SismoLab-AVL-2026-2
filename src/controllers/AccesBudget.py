@@ -1,6 +1,8 @@
 def is_expensive_access(event, node_depth, depth_limit):
     # Section 9: only priority-3 (high priority) events can carry this mark
-    return event.priority == 3 and node_depth > depth_limit
+    # BUG FIX: was event.priority, which doesn't exist on Event (private
+    # attribute, only exposed via getPriority()).
+    return event.getPriority() == 3 and node_depth > depth_limit
 
 
 def find_expensive_access_events(catalog, tree):

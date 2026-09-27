@@ -9,12 +9,12 @@ from src.controllers.EventValidator import validate_event_input
 from src.controllers.OperationResult import OperationResult
 from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
 class Scenery:
-    
+
     def __init__(self, zones, stations, simulation_clock, tree, undo_stack, parameters):
-        
+
         self.zones = zones
         self.stations = stations
-        self.simulation_clock = simulation_clock    
+        self.simulation_clock = simulation_clock
         self.tree = tree
         self.undo_stack = undo_stack
         self.active_events = {}
@@ -22,7 +22,7 @@ class Scenery:
         self.eliminated_ids = set()
         self.parameters = parameters
         self.access_depth_limit = 3  # section 9: initial value is 3
-    
+
     def create_event(
         self,
         event_id: int,
@@ -33,37 +33,45 @@ class Scenery:
         occurred_at,
         origin_station_id: str,
     ) -> OperationResult:
-        
+
         if (event_id in self.active_events
             or event_id in self.eliminated_ids):
             return OperationResult(False, "Identifier" +str(event_id) + " is already in use.")
-        
+
         #validate range (section 6)
-        
+
         errors = validate_event_input(
             event_id, magnitude, depth_km, epicenter_x, epicenter_y,
             occurred_at, origin_station_id, self.stations, self.simulation_clock
             )
-        
+
         if errors:
             return OperationResult(False, " ".join(errors))
-        
+
         epicenter = Point(epicenter_x, epicenter_y)
         is_in_populated_zone = belongs_to_populated_zone(epicenter, self.zones)
         priority = calculate_priority(magnitude, depth_km, is_in_populated_zone)
-        
+
+        # BUG FIX: Event.create_new's real parameters are named `depth` and
+        # `ocurredAt` — this call used to pass `depth_km=` and
+        # `occurred_at=`, neither of which matches, so it raised TypeError
+        # before even getting to the Key() bug below.
         event = Event.create_new(
             event_id=event_id,
             magnitude=magnitude,
-            depth_km=depth_km,
+            depth=depth_km,
             epicenter=epicenter,
-            occurred_at=occurred_at,
+            ocurredAt=occurred_at,
             origin_station_id=origin_station_id,
             priority=priority,
         )
 
-        key = Key(event.priority, event.magnitude, event.event_id)
-        self.tree.insert(key, event.event_id)
+        # BUG FIX: was Key(event.priority, event.magnitude, event.event_id)
+        # — none of those exist on Event as plain attributes (private,
+        # only exposed via getPriority()/getMagnitude()/getEventId()).
+        # This raised AttributeError on every single create_event() call.
+        key = Key(event.getPriority(), event.getMagnitude(), event.getEventId())
+        self.tree.insert(key, event.getEventId())
         self.active_events[event_id] = event
 
         self.undo_stack.push_creation(event_id)
@@ -73,14 +81,14 @@ class Scenery:
         # the next piece to build.
 
         return OperationResult(True, "Event " + str(event_id) + " created with priority " + str(priority) + ".", event)
-    
-    
+
+
     def set_access_depth_limit(self, new_limit):
         if new_limit < 0:
             return OperationResult(False, "Access depth limit must be a non-negative integer.")
         self.access_depth_limit = new_limit
         return OperationResult(True, "Access depth limit updated to " + str(new_limit) + ".")
-        
+
     def advance_clock(self, delta):
         #Advances simulation clock by delta time steps.
         errors = self.simulation_clock.advance(delta)
@@ -93,8 +101,8 @@ class Scenery:
          errors = self.parameters.update(w=w, r=r, l=l, t=t)
          if errors:
              return OperationResult(False, " ".join(errors))
-         return OperationResult(True, "Parameters updated.")  
-    
+         return OperationResult(True, "Parameters updated.")
+
     def get_event(self, event_id):
         if event_id in self.active_events:
             return EventLookupResult(EventStatus.ACTIVE, self.active_events[event_id])
@@ -105,13 +113,15 @@ class Scenery:
         else:
             return EventLookupResult(EventStatus.UNKNOWN)
 
-
     def mark_as_reviewed(self, event_id):
-     if event_id not in self.active_events:
-        return OperationResult(False, "Event " + str(event_id) + " is not an active event.")
+        if event_id not in self.active_events:
+            return OperationResult(False, "Event " + str(event_id) + " is not an active event.")
 
-     event = self.active_events[event_id]
-     event.status = AttetionStatus.REVIEWED
-
-        
-        
+        event = self.active_events[event_id]
+        # BUG FIX: was `event.status = AttetionStatus.REVIEWED`, which
+        # created a brand new public "status" attribute instead of
+        # touching the private __status — getStatus() kept returning
+        # PENDING forever. Also, the function fell off the end without a
+        # return, so callers got None instead of an OperationResult.
+        event.setStatus(AttetionStatus.REVIEWED)
+        return OperationResult(True, "Event " + str(event_id) + " marked as reviewed.", event)
