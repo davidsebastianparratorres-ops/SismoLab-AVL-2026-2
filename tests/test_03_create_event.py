@@ -89,9 +89,8 @@ def test_eliminated_id_cannot_be_reused():
     assert not create(scenery, event_id=5).success
 
 
-@pytest.mark.xfail(reason="create_event only checks active and eliminated ids; confirm in the "
-                          "spec whether an archived id may be reused", strict=True)
 def test_archived_id_cannot_be_reused():
+    # Spec: archived events keep their identity, data and associations in the history.
     scenery = build_scenery()
     add_event(scenery, 5, 5.0)
     scenery.archived_events[5] = scenery.active_events.pop(5)

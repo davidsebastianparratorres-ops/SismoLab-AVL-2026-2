@@ -86,9 +86,20 @@ def test_empty_tree_has_no_costly_events():
     assert EventQueries().high_priority_costly_access(None, {}, 3).events == []
 
 
-@pytest.mark.xfail(reason="update_parameters(l=...) changes SimulationParameters.L but not "
-                          "Scenery.access_depth_limit; two sources of truth for L", strict=True)
 def test_parameter_l_drives_the_access_limit():
     scenery = build_scenery()
-    scenery.update_parameters(l=5)
+    assert scenery.update_parameters(l=5).success
     assert scenery.access_depth_limit == 5
+    assert scenery.parameters.l == 5
+
+
+def test_set_access_depth_limit_writes_to_simulation_parameters():
+    scenery = build_scenery()
+    scenery.set_access_depth_limit(6)
+    assert scenery.parameters.l == 6
+
+
+def test_non_integer_limit_is_rejected():
+    scenery = build_scenery()
+    assert not scenery.set_access_depth_limit(2.5).success
+    assert scenery.access_depth_limit == 3
