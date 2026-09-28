@@ -6,15 +6,15 @@ def belongs_to_populated_zone(epicenter: Point, zones: list) -> bool:
             return True
     return False
 
-def calculate_priority(magnitude:float, depth:float, is_in_populated_zone:bool) -> int:
+def calculate_priority(magnitude:float, depth_km:float, is_in_populated_zone:bool) -> int:
     if magnitude >= 6.0:
         return 3
-    if magnitude >= 4.5 and depth <= 30.0 and is_in_populated_zone:
+    if magnitude >= 4.5 and depth_km <= 30.0 and is_in_populated_zone:
         return 3
     if magnitude >= 4.5:
         return 2
     return 1
 
 def search_cost(event_id, node_depths):
-    depth = node_depths.get(event_id)
-    return None if depth is None else depth + 1
+    node_depth = node_depths.get(event_id)
+    return None if node_depth is None else node_depth + 1
