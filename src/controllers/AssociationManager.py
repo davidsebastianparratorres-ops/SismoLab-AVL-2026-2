@@ -3,11 +3,19 @@ from src.controllers.AssociationRules import is_candidate, choose_reference
 
 class AssociationManager:
 
-    def __init__(self, scenery, max_hours=48.0, max_distance_km=40.0):
+    def __init__(self, scenery):
         self.scenery = scenery
-        self.max_hours = max_hours
-        self.max_distance_km = max_distance_km
         self.associations = {}  # dict[replica_id, Association] -- only entries WITH a chosen reference
+
+    @property
+    def max_hours(self):
+        # W: single source of truth is SimulationParameters
+        return self.scenery.parameters.w
+
+    @property
+    def max_distance_km(self):
+        # R: single source of truth is SimulationParameters
+        return self.scenery.parameters.r
 
     def _all_eligible_events(self):
         # "Se consideran eventos activos y archivados, pero no eliminados" (section 7)
@@ -54,7 +62,16 @@ class AssociationManager:
         # Simple, correct approach: after any change that could affect
         # associations (create, correct, delete, or a change to W/R),
         # recompute every event's association from scratch.
-        for event in self._all_eligible_events():
+        eligible = self._all_eligible_events()
+        eligible_ids = {event.getEventId() for event in eligible}
+
+        # Entries whose replica is no longer eligible (deleted) would never
+        # be visited by the loop below, so they must be dropped explicitly.
+        for replica_id in list(self.associations):
+            if replica_id not in eligible_ids:
+                del self.associations[replica_id]
+
+        for event in eligible:
             self.recalculate_for_event(event.getEventId())
 
     def get_candidates_and_reference(self, event_id):

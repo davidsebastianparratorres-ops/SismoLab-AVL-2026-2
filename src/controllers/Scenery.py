@@ -21,7 +21,12 @@ class Scenery:
         self.archived_events = {}
         self.eliminated_ids = set()
         self.parameters = parameters
-        self.access_depth_limit = 3  # section 9: initial value is 3
+
+    @property
+    def access_depth_limit(self):
+        # L lives only in SimulationParameters (single source of truth);
+        # this is a read-only view so existing readers keep working.
+        return self.parameters.l
 
     def create_event(
         self,
@@ -34,7 +39,10 @@ class Scenery:
         origin_station_id: str,
     ) -> OperationResult:
 
+        # Archived events keep their identity in the history, so their ids
+        # stay reserved just like active and eliminated ones.
         if (event_id in self.active_events
+            or event_id in self.archived_events
             or event_id in self.eliminated_ids):
             return OperationResult(False, "Identifier" +str(event_id) + " is already in use.")
 
@@ -52,10 +60,8 @@ class Scenery:
         is_in_populated_zone = belongs_to_populated_zone(epicenter, self.zones)
         priority = calculate_priority(magnitude, depth_km, is_in_populated_zone)
 
-        # BUG FIX: Event.create_new's real parameters are named `depth` and
-        # `ocurredAt` — this call used to pass `depth_km=` and
-        # `occurred_at=`, neither of which matches, so it raised TypeError
-        # before even getting to the Key() bug below.
+        # `depth_km` (hypocenter depth) is the only name for physical depth;
+        # node depth in the tree is always called node_depth / depth limit L.
         event = Event.create_new(
             event_id=event_id,
             magnitude=magnitude,
@@ -84,9 +90,9 @@ class Scenery:
 
 
     def set_access_depth_limit(self, new_limit):
-        if new_limit < 0:
-            return OperationResult(False, "Access depth limit must be a non-negative integer.")
-        self.access_depth_limit = new_limit
+        errors = self.parameters.update(l=new_limit)
+        if errors:
+            return OperationResult(False, " ".join(errors))
         return OperationResult(True, "Access depth limit updated to " + str(new_limit) + ".")
 
     def advance_clock(self, delta):
