@@ -85,7 +85,7 @@ class TopologyIO:
                 event_id=event_id,
                 magnitude=raw["magnitude"],
                 epicenter=epicenter,
-                depth=raw["depth"],
+                depth_km=raw["depth"],
                 status=raw["status"],
                 associatedEvents=list(raw.get("associatedEvents", [])),
                 stations=list(raw.get("stations", [])),

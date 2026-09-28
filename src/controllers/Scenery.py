@@ -59,7 +59,7 @@ class Scenery:
         event = Event.create_new(
             event_id=event_id,
             magnitude=magnitude,
-            depth=depth_km,
+            depth_km=depth_km,
             epicenter=epicenter,
             ocurredAt=occurred_at,
             origin_station_id=origin_station_id,
