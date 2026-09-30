@@ -11,23 +11,28 @@ class Event:
         event_id=0,
         magnitude=0.0,
         epicenter=None,
-        depth=0.0,
+        depth_km=0.0,
         status=AttetionStatus.PENDING,
-        associatedEvents=None,
         stations=None,
         ocurredAt="",
-        priority=0, 
-        review=1):
+        priority=0,
+        review=1,
+        associatedEvents=None):
         self.__event_id = event_id
         self.__magnitude = magnitude
         self.__epicenter = epicenter if epicenter is not None else Point()
-        self.__depth = depth
+        self.__depth_km = depth_km
         self.__status = status
-        self.__associatedEvents = associatedEvents if associatedEvents is not None else []
         self.__stations = stations if stations is not None else []
         self.__ocurredAt = ocurredAt
         self.__priority = priority
         self.__review = review
+        # BUG FIX: this attribute was never initialized before, and the
+        # constructor didn't even accept it as a parameter. Any call to
+        # getAssociatedEvents() on a normally-created event raised
+        # AttributeError, and TopologyIO's load() crashed with TypeError
+        # trying to pass associatedEvents= into the old signature.
+        self.__associatedEvents = associatedEvents if associatedEvents is not None else []
 
     def getEventId(self):
         return self.__event_id
@@ -47,11 +52,12 @@ class Event:
     def setEpicenter(self, epicenter):
         self.__epicenter = epicenter
 
-    def getDepth(self):
-        return self.__depth
+    def getDepth_km(self):
+        return self.__depth_km
 
-    def setDepth(self, depth):
-        self.__depth = depth
+    def setDepth_km(self, depth_km):
+        self.__depth_km = depth_km
+
 
     def getStatus(self):
         return self.__status
@@ -90,7 +96,7 @@ class Event:
         self.__review = review
 
     @classmethod
-    def create_new(cls, event_id, magnitude, epicenter, depth, ocurredAt, origin_station_id, priority):
+    def create_new(cls, event_id, magnitude, epicenter, depth_km, ocurredAt, origin_station_id, priority):
         # Used only for brand-new events: always starts pending, review 1,
         # with a single reporting station. Restoring a saved/topology event
         # goes through the main constructor instead, since it may carry a
@@ -99,9 +105,8 @@ class Event:
             event_id=event_id,
             magnitude=magnitude,
             epicenter=epicenter,
-            depth=depth,
+            depth_km=depth_km,
             status=AttetionStatus.PENDING,
-            associatedEvents=[],
             stations=[origin_station_id],
             ocurredAt=ocurredAt,
             priority=priority,

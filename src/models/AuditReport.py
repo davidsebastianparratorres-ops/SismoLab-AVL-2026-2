@@ -50,7 +50,7 @@ class AuditReport:
         return [i for i in self.issues if i.severity == Severity.INFO]
 
     def errors_by_event(self) -> dict:
-        """Groups errors by inconsistent event ID: {event_id: [AuditIssue, ...]}."""
+        #Groups errors by inconsistent event ID: {event_id: [AuditIssue, ...]}.
         grouped = {}
         for issue in self.errors():
             grouped.setdefault(issue.event_id, []).append(issue)
@@ -69,22 +69,22 @@ class AuditReport:
     def to_text(self) -> str:
         mode = "STRESS" if self.stress_mode else "NORMAL"
         lines = [
-            f"Structure verification ({mode} mode): "
-            f"{self.nodes_examined} nodes examined, height {self.tree_height}."
+            f"Verificación de la estructura ({mode} modo): "
+            f"{self.nodes_examined} nodos examinados, altura {self.tree_height}."
         ]
         if not self.has_errors():
-            lines.append("No structural inconsistencies found.")
+            lines.append("No se encontraron inconsistencias estructurales.")
         for event_id, issues in self.errors_by_event().items():
             lines.append(f"Event {event_id}:")
             for issue in issues:
                 lines.append(f"  [{issue.category}] {issue.message}")
         if self.imbalanced_count:
             lines.append(
-                f"Imbalanced nodes: {self.imbalanced_count} "
-                f"(max imbalance: {self.max_imbalance})."
+                f"Nodos desequilibrados: {self.imbalanced_count} "
+                f"(desequilibrio máximo: {self.max_imbalance})."
             )
         lines.append(
-            "AVL Property: "
-            + ("SATISFIED" if self.is_valid_avl else "VIOLATED")
+            "Propiedad AVL:"
+            + ("SATISFECHO" if self.is_valid_avl else "VIOLADA")
         )
         return "\n".join(lines)

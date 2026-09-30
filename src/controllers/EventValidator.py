@@ -1,3 +1,5 @@
+
+
 def has_at_most_one_decimal(value: float) -> bool:
     scaled_value = value * 10
     return abs(scaled_value - round(scaled_value)) < 1e-9
@@ -53,3 +55,4 @@ def validate_ranges(event_id: int, magnitude: float, depth_km: float, epicenter_
         errors.append("Epicenter y must have at most one decimal place.")
 
     return errors
+

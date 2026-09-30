@@ -1,7 +1,6 @@
 import json
 
-from src.controllers.PriorityCalculator import calculate_priority
-from src.controllers.ZoneLocator import belongs_to_populated_zone
+from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
 from src.controllers.EventValidator import validate_ranges
 from src.controllers.TreeAuditor import TreeAuditor
 from src.models.Node import Node
@@ -53,7 +52,7 @@ class TopologyIO:
 
         if not errors:
             report = TreeAuditor().audit(root, events, stress_mode=stress_mode)
-            errors.extend(issue.message for issue in report.errors())
+            errors.extend(f"[{issue.category}] Evento {issue.event_id}: {issue.message}" for issue in report.errors())
 
         if errors:
             return LoadResult(success=False, errors=errors)
@@ -93,7 +92,7 @@ class TopologyIO:
                 event_id=event_id,
                 magnitude=raw["magnitude"],
                 epicenter=epicenter,
-                depth=raw["depth"],
+                depth_km=raw["depth"],
                 status=raw["status"],
                 associatedEvents=list(raw.get("associatedEvents", [])),
                 stations=list(raw.get("stations", [])),
@@ -210,7 +209,7 @@ class TopologyIO:
         return {
             str(event_id): {
                 "magnitude": event.getMagnitude(),
-                "depth": event.getDepth(),
+                "depth": event.getDepth_km(),
                 "epicenter": {"x": event.getEpicenter().getX(), "y": event.getEpicenter().getY()},
                 "status": event.getStatus(),
                 "associatedEvents": list(event.getAssociatedEvents()),
