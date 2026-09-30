@@ -17,11 +17,7 @@ def render_scenario_load_page():
         st.warning("Sube un archivo JSON primero.")
         return
 
-    # Streamlit only gives the file in memory — TopologyIO reads from a
-    # real path on disk (same as when the app runs outside Streamlit), so
-    # it's written to a temp file first. tempfile.gettempdir() resolves
-    # the correct OS temp folder (Windows, Mac, Linux) instead of a
-    # hardcoded path that only works on one of them.
+    
     temp_path = os.path.join(tempfile.gettempdir(), uploaded_file.name)
     with open(temp_path, "wb") as f:
         f.write(uploaded_file.getbuffer())

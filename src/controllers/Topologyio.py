@@ -3,10 +3,12 @@ import json
 from src.controllers.PriorityCalculator import calculate_priority
 from src.controllers.ZoneLocator import belongs_to_populated_zone
 from src.controllers.EventValidator import validate_ranges
+from src.controllers.TreeAuditor import TreeAuditor
 from src.models.Node import Node
 from src.models.Key import Key
 from src.models.Event import Event
 from src.models.Point import Point
+from src.models.SimulationClock import parse_iso_utc, format_iso_utc
 
 
 class LoadResult:
@@ -34,7 +36,7 @@ class TopologyIO:
     # Load
     # ------------------------------------------------------------------
 
-    def load(self, filepath: str, zones: list) -> LoadResult:
+    def load(self, filepath: str, zones: list, stress_mode: bool = False) -> LoadResult:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -43,15 +45,15 @@ class TopologyIO:
         errors.extend(event_errors)
 
         seen_ids = set()
-        root, tree_errors = self.__build_node(data.get("arbol"), events, seen_ids, parent=None)
+        root, tree_errors = self.__build_node(data.get("arbol"), events, seen_ids)
         errors.extend(tree_errors)
 
         for orphan_id in set(events.keys()) - seen_ids:
             errors.append(f"Event {orphan_id} exists in 'eventos' but has no node in 'arbol'.")
 
         if not errors:
-            errors.extend(self.__validate_bst_order(root))
-            errors.extend(self.__validate_stored_metadata(root))
+            report = TreeAuditor().audit(root, events, stress_mode=stress_mode)
+            errors.extend(issue.message for issue in report.errors())
 
         if errors:
             return LoadResult(success=False, errors=errors)
@@ -68,6 +70,12 @@ class TopologyIO:
             )
             if range_errors:
                 errors.extend(range_errors)
+                continue
+
+            try:
+                occurred_at = parse_iso_utc(raw["ocurredAt"])
+            except ValueError as error:
+                errors.append(f"Event {event_id}: invalid ocurredAt — {error}")
                 continue
 
             epicenter = Point(raw["epicenter"]["x"], raw["epicenter"]["y"])
@@ -89,77 +97,62 @@ class TopologyIO:
                 status=raw["status"],
                 associatedEvents=list(raw.get("associatedEvents", [])),
                 stations=list(raw.get("stations", [])),
-                ocurredAt=raw["ocurredAt"],
+                ocurredAt=occurred_at,
                 priority=raw["priority"],
                 review=raw["review"],
             )
 
         return events, errors
 
-    def __build_node(self, raw_node, events: dict, seen_ids: set, parent) -> tuple:
-        if raw_node is None:
+    def __build_node(self, raw_root, events: dict, seen_ids: set):
+        if raw_root is None:
             return None, []
 
-        event_id = raw_node["event_id"]
-        if event_id not in events:
-            return None, [f"Node references event_id {event_id}, which is not in 'eventos'."]
-        if event_id in seen_ids:
-            return None, [f"Event {event_id} appears in more than one tree position."]
-        seen_ids.add(event_id)
-
-        raw_key = raw_node["key"]
-        if raw_key["identifier"] != event_id:
-            return None, [
-                f"Node event_id ({event_id}) does not match its own key identifier "
-                f"({raw_key['identifier']})."
-            ]
-
-        node = Node(Key(raw_key["priority"], raw_key["magnitude"], raw_key["identifier"]), event_id)
-        node.setParent(parent)
-        node.setHeight(raw_node.get("altura"))
-        node.setBalanceFactor(raw_node.get("factorEquilibrio"))
-
-        left, left_errors = self.__build_node(raw_node.get("izquierdo"), events, seen_ids, node)
-        right, right_errors = self.__build_node(raw_node.get("derecho"), events, seen_ids, node)
-        node.setLeft(left)
-        node.setRight(right)
-
-        return node, left_errors + right_errors
-
-    def __validate_bst_order(self, node, lower=None, upper=None) -> list:
-        # Checked against every ancestor's bound, not just the immediate
-        # parent — section 14 requires this, a local check is not enough.
-        if node is None:
-            return []
-        key = node.getKey().as_tuple
         errors = []
-        if lower is not None and key <= lower:
-            errors.append(f"Event {node.getEventId()}: key {key} violates BST order.")
-        if upper is not None and key >= upper:
-            errors.append(f"Event {node.getEventId()}: key {key} violates BST order.")
-        errors += self.__validate_bst_order(node.getLeft(), lower, key)
-        errors += self.__validate_bst_order(node.getRight(), key, upper)
-        return errors
+        root = None
+        # Explicit stack instead of recursion: a stress-mode topology can be
+        # a long degenerate chain of thousands of nodes, which would blow
+        # Python's recursion limit right when loading matters most.
+        stack = [(raw_root, None, None)]  # (raw_node, parent_node, side)
 
-    def __validate_stored_metadata(self, root) -> list:
-        errors = []
+        while stack:
+            raw, parent, side = stack.pop()
+            if raw is None:
+                continue
 
-        def compute(node):
-            if node is None:
-                return -1  # height of an empty subtree (section 14)
-            left_h = compute(node.getLeft())
-            right_h = compute(node.getRight())
-            real_height = 1 + max(left_h, right_h)
-            real_bf = left_h - right_h
+            event_id = raw["event_id"]
+            if event_id not in events:
+                errors.append(f"Node references event_id {event_id}, which is not in 'eventos'.")
+                continue
+            if event_id in seen_ids:
+                errors.append(f"Event {event_id} appears in more than one tree position.")
+                continue
 
-            if node.getHeight() is not None and node.getHeight() != real_height:
-                errors.append(f"Event {node.getEventId()}: stored height does not match the real one.")
-            if node.getBalanceFactor() is not None and node.getBalanceFactor() != real_bf:
-                errors.append(f"Event {node.getEventId()}: stored balance factor does not match the real one.")
-            return real_height
+            raw_key = raw["key"]
+            if raw_key["identifier"] != event_id:
+                errors.append(
+                    f"Node event_id ({event_id}) does not match its own key identifier "
+                    f"({raw_key['identifier']})."
+                )
+                continue
+            seen_ids.add(event_id)
 
-        compute(root)
-        return errors
+            node = Node(Key(raw_key["priority"], raw_key["magnitude"], raw_key["identifier"]), event_id)
+            node.setParent(parent)
+            node.setHeight(raw.get("altura"))
+            node.setBalanceFactor(raw.get("factorEquilibrio"))
+
+            if parent is None:
+                root = node
+            elif side == "left":
+                parent.setLeft(node)
+            else:
+                parent.setRight(node)
+
+            stack.append((raw.get("derecho"), node, "right"))
+            stack.append((raw.get("izquierdo"), node, "left"))
+
+        return root, errors
 
     # ------------------------------------------------------------------
     # Save
@@ -174,17 +167,43 @@ class TopologyIO:
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
-    def __node_to_dict(self, node):
-        if node is None:
+    def __node_to_dict(self, root):
+        if root is None:
             return None
+
+        # Same reasoning as loading: an explicit stack avoids blowing the
+        # recursion limit when exporting a long degenerate (stress-mode)
+        # chain. Each dict starts with placeholder links, filled in as its
+        # children are visited — no need to "return up" a finished child.
+        root_dict = self.__node_shell(root)
+        stack = [(root, root_dict)]
+
+        while stack:
+            node, node_dict = stack.pop()
+
+            left = node.getLeft()
+            if left is not None:
+                left_dict = self.__node_shell(left)
+                node_dict["izquierdo"] = left_dict
+                stack.append((left, left_dict))
+
+            right = node.getRight()
+            if right is not None:
+                right_dict = self.__node_shell(right)
+                node_dict["derecho"] = right_dict
+                stack.append((right, right_dict))
+
+        return root_dict
+
+    def __node_shell(self, node) -> dict:
         key = node.getKey()
         return {
             "event_id": node.getEventId(),
             "key": {"priority": key.priority, "magnitude": key.magnitude, "identifier": key.identifier},
             "altura": node.getHeight(),
             "factorEquilibrio": node.getBalanceFactor(),
-            "izquierdo": self.__node_to_dict(node.getLeft()),
-            "derecho": self.__node_to_dict(node.getRight()),
+            "izquierdo": None,
+            "derecho": None,
         }
 
     def __events_to_dict(self, events: dict) -> dict:
@@ -196,7 +215,7 @@ class TopologyIO:
                 "status": event.getStatus(),
                 "associatedEvents": list(event.getAssociatedEvents()),
                 "stations": list(event.getStations()),
-                "ocurredAt": event.getOcurredAt(),
+                "ocurredAt": format_iso_utc(event.getOcurredAt()),
                 "priority": event.getPriority(),
                 "review": event.getReview(),
             }
