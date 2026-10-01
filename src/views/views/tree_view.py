@@ -2,7 +2,7 @@ import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from presentation.styles.theme import (
+from src.views.styles.theme import (
     TREE_NORMAL_NODE_COLOR,
     TREE_HIGHLIGHT_NODE_COLOR,
     TREE_EDGE_COLOR,
