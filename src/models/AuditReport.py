@@ -69,7 +69,7 @@ class AuditReport:
     def to_text(self) -> str:
         mode = "STRESS" if self.stress_mode else "NORMAL"
         lines = [
-            f"Verificación de la estructura ({mode} modo): "
+            f"VerificaciÃ³n de la estructura ({mode} modo): "
             f"{self.nodes_examined} nodos examinados, altura {self.tree_height}."
         ]
         if not self.has_errors():
@@ -81,7 +81,7 @@ class AuditReport:
         if self.imbalanced_count:
             lines.append(
                 f"Nodos desequilibrados: {self.imbalanced_count} "
-                f"(desequilibrio máximo: {self.max_imbalance})."
+                f"(desequilibrio mÃ¡ximo: {self.max_imbalance})."
             )
         lines.append(
             "Propiedad AVL:"

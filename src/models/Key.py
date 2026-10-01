@@ -4,14 +4,14 @@ class Key:
         self.magnitude = magnitude
         self.identifier = identifier
         # Native tuple: Python compares tuples element by element,
-        # left to right, stopping at the first differing component —
+        # left to right, stopping at the first differing component â€”
         # which is exactly the lexicographic rule from section 5.
         self.as_tuple = (priority, magnitude, identifier)
 
     @classmethod
     def from_event(cls, event):
         # BUG FIX: was reading event.priority / event.magnitude /
-        # event.identifier — none of which exist on Event (private
+        # event.identifier â€” none of which exist on Event (private
         # attributes, only exposed via getPriority()/getMagnitude()/
         # getEventId()).
         return cls(event.getPriority(), event.getMagnitude(), event.getEventId())

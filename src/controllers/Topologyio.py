@@ -170,10 +170,6 @@ class TopologyIO:
         if root is None:
             return None
 
-        # Same reasoning as loading: an explicit stack avoids blowing the
-        # recursion limit when exporting a long degenerate (stress-mode)
-        # chain. Each dict starts with placeholder links, filled in as its
-        # children are visited — no need to "return up" a finished child.
         root_dict = self.__node_shell(root)
         stack = [(root, root_dict)]
 

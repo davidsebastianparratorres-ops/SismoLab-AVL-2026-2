@@ -1,11 +1,11 @@
 class UndoStack:
-    """Placeholder mínimo mientras el equipo define la representación real
-    del historial de deshacer (ver decisiones de diseño abiertas). Solo
-    existe para que Scenery pueda instanciarse y probarse — no implementa
-    undo() todavía, solo registra qué pasó.
+    """Placeholder mÃ­nimo mientras el equipo define la representaciÃ³n real
+    del historial de deshacer (ver decisiones de diseÃ±o abiertas). Solo
+    existe para que Scenery pueda instanciarse y probarse â€” no implementa
+    undo() todavÃ­a, solo registra quÃ© pasÃ³.
 
-    Nadie más en el dump del proyecto define esta clase, así que
-    Scenery.create_event no podía ni ejecutarse en pruebas sin esto.
+    Nadie mÃ¡s en el dump del proyecto define esta clase, asÃ­ que
+    Scenery.create_event no podÃ­a ni ejecutarse en pruebas sin esto.
     """
 
     def __init__(self):

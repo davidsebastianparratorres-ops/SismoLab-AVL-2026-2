@@ -1,5 +1,5 @@
-from src.controllers.AttetionStatus import AttetionStatus
-from src.models.QueryResult import QueryResult, CostlyAccessEntry, AssociationsSummary
+from src.models.AttetionStatus import AttetionStatus
+from src.dto.QueryResult import QueryResult, CostlyAccessEntry, AssociationsSummary
 from src.models.SimulationClock import parse_iso_utc
 
 
@@ -54,7 +54,7 @@ class EventQueries:
 
         message = f"Se encontraron {len(found)} evento(s) pendiente(s)."
         if len(found) < k:
-            message += " (había menos pendientes que los solicitados, se muestran todos)."
+            message += " (habÃ­a menos pendientes que los solicitados, se muestran todos)."
         return QueryResult(found, nodes_examined, message)
 
     # ------------------------------------------------------------------
@@ -63,7 +63,7 @@ class EventQueries:
     def events_by_magnitude_range(self, root, active_events: dict,
                                    magnitude_min: float, magnitude_max: float) -> QueryResult:
         """
-        Cost: the tree's key is K = (priority, magnitude, id) — sorted
+        Cost: the tree's key is K = (priority, magnitude, id) â€” sorted
         FIRST by priority, magnitude only breaks ties. Two events with the
         same magnitude but different priority can end up anywhere in the
         tree relative to each other, so it cannot be pruned using a
@@ -155,7 +155,7 @@ class EventQueries:
         the root to locate an existing event.
 
         Cost: finding ALL high-priority events with costly access requires
-        a full scan, O(n) in the worst case — there is no way to prune by
+        a full scan, O(n) in the worst case â€” there is no way to prune by
         K, because priority alone does not determine depth in the tree
         (the AVL only guarantees the BST order, not where each priority
         group physically sits).
@@ -164,7 +164,7 @@ class EventQueries:
         nodes_examined = 0
 
         if root is None:
-            return QueryResult([], 0, "El árbol está vacío.")
+            return QueryResult([], 0, "El Ã¡rbol estÃ¡ vacÃ­o.")
 
         # Each stack entry carries (node, depth). The root has depth 0
         # (section 9).
@@ -194,7 +194,7 @@ class EventQueries:
         nodes_examined = 0
 
         if root is None:
-            return QueryResult([], 0, "El árbol está vacío.")
+            return QueryResult([], 0, "El Ã¡rbol estÃ¡ vacÃ­o.")
 
         stack = [root]
         while stack:
