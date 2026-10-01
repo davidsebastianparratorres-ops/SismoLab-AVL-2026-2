@@ -34,10 +34,7 @@ def _build_graph(node, G=None, pos=None, x=0.0, y=0.0, layer=1):
 
 
 def render_tree(root, highlight_id=None):
-    """Pure presentation: turns a tree of Node objects into a picture.
-    Knows nothing about how the tree got built (loaded, inserted, restored)
-    — only needs getLeft()/getRight()/getEventId(). All colors and sizes
-    come from styles/theme.py, never hardcoded here."""
+    """Pure presentation: turns a tree of Node objects into a picture."""
     if root is None:
         st.info("Árbol vacío — carga un escenario para verlo aquí.")
         return
