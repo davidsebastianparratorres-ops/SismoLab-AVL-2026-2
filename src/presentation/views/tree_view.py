@@ -1,6 +1,8 @@
 import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
+from src.controllers.EventQueries import EventQueries
+from src.rules.AssociationManage import AssociationManager
 
 from src.presentation.styles.theme import (
     TREE_NORMAL_NODE_COLOR,
@@ -57,3 +59,40 @@ def render_tree(root, highlight_id=None):
     )
     st.pyplot(fig)
     plt.close(fig)
+
+
+   #Queries Component Section 11
+def render_tree_queries(active_events: dict, archived_events: dict, w_hours: float = 24.0, r_km: float = 50.0):
+    """Renderiza el panel interactivo para ejecutar las consultas sobre el árbol AVL."""
+    st.divider()
+    st.subheader("Consultas de la Sección 11")
+
+    # Deferred invocation to avoid circular imports at startup
+    
+
+    tab1, tab2 = st.tabs(["Consulta de Asociaciones", "Otras Consultas"])
+
+    with tab1:
+        target_id = st.number_input("ID del evento a consultar:", min_value=1, max_value=999999, value=1, step=1)
+        
+        if st.button("Ejecutar Consulta de Asociaciones"):
+            assoc_manager = AssociationManager(max_hours=w_hours, max_distance_km=r_km)
+            get_candidates, get_reference = assoc_manager.build_callbacks(active_events, archived_events)
+            
+            queries = EventQueries()
+            result = queries.event_associations(
+                event_id=int(target_id),
+                active_events=active_events,
+                archived_events=archived_events,
+                get_candidates=get_candidates,
+                get_reference=get_reference
+            )
+
+            st.info(result.message)
+            st.metric(label="Nodos examinados en el árbol", value=result.nodes_examined)
+
+            if result.events:
+                summary = result.events[0]
+                st.write("**Referencia Elegida:**", summary.chosen_reference if summary.chosen_reference else "Ninguna")
+                st.write(f"**Candidatos en rango ({len(summary.candidates)}):**", summary.candidates)
+                st.write(f"**Eventos que lo referencian ({len(summary.referenced_by)}):**", summary.referenced_by)

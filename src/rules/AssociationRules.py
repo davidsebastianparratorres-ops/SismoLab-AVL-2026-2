@@ -15,7 +15,7 @@ def hours_between(earlier_time, later_time):
 def is_candidate(candidate_event, target_event, max_hours, max_distance_km):
     # BUG FIX: this whole function used to read event_id / magnitude /
     # occurred_at / epicenter as plain attributes. None of those exist on
-    # Event â€” it only exposes getEventId(), getMagnitude(), getOcurredAt(),
+    # Event  it only exposes getEventId(), getMagnitude(), getOcurredAt(),
     # getEpicenter(). Every call raised AttributeError before reaching any
     # actual candidate logic.
     if candidate_event.getEventId() == target_event.getEventId():

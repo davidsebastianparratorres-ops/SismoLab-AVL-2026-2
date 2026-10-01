@@ -24,10 +24,10 @@ def render_historic(historic):
 def render_undo_redo_controls(history):
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("↩️ Deshacer", disabled=not history.can_undo(), use_container_width=True):
+        if st.button("Deshacer", disabled=not history.can_undo(), use_container_width=True):
             history.undo()
             st.rerun()
     with col2:
-        if st.button("↪️ Rehacer", disabled=not history.can_redo(), use_container_width=True):
+        if st.button("Rehacer", disabled=not history.can_redo(), use_container_width=True):
             history.redo()
             st.rerun()

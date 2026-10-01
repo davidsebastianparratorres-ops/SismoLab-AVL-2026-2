@@ -2,7 +2,7 @@ from src.models.SimulationClock import parse_iso_utc
 
 
 def _as_datetime(value):
-    """occurred_at may be stored as a datetime or as an ISO 8601 string,
+    """Occurred_at may be stored as a datetime or as an ISO 8601 string,
     same situation as EventQueries._as_datetime. Normalizes either into a
     comparable datetime."""
     return parse_iso_utc(value) if isinstance(value, str) else value

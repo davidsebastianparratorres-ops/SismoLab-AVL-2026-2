@@ -4,7 +4,7 @@ class Key:
         self.magnitude = magnitude
         self.identifier = identifier
         # Native tuple: Python compares tuples element by element,
-        # left to right, stopping at the first differing component â€”
+        # left to right, stopping at the first differing component
         # which is exactly the lexicographic rule from section 5.
         self.as_tuple = (priority, magnitude, identifier)
 

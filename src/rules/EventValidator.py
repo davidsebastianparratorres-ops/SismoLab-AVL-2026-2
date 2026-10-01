@@ -27,7 +27,7 @@ def validate_event_input(
 
 def validate_ranges(event_id: int, magnitude: float, depth_km: float, epicenter_x: float, epicenter_y: float) -> list:
     # Fixed numeric ranges from section 3 (id, magnitude, depth, epicenter).
-    # Shared by every caller that needs to check raw event data â€” a brand
+    # Shared by every caller that needs to check raw event data a brand
     # new event and a topology-loaded event follow the exact same rules.
     errors = []
 
