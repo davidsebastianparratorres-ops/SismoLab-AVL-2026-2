@@ -1,5 +1,5 @@
-from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
-from src.controllers.AttetionStatus import AttetionStatus
+from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
+from src.models.AttetionStatus import AttetionStatus
 
 
 class ArchiveManager:

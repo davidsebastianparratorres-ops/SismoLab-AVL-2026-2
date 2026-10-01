@@ -1,5 +1,5 @@
 import tempfile
-import osgi
+import os
 import streamlit as st
 
 from src.controllers.Topologyio import TopologyIO
