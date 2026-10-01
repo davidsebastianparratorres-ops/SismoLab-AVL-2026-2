@@ -141,47 +141,17 @@ class TopologyIO:
             node.setHeight(raw.get("altura"))
             node.setBalanceFactor(raw.get("factorEquilibrio"))
 
-        left, left_errors = self.__build_node(raw_node.get("izquierdo"), events, seen_ids, node)
-        right, right_errors = self.__build_node(raw_node.get("derecho"), events, seen_ids, node)
-        node.setLeft(left)
-        node.setRight(right)
+            if parent is None:
+                root = node
+            elif side == "left":
+                parent.setLeft(node)
+            else:
+                parent.setRight(node)
 
-        return node, left_errors + right_errors
+            stack.append((raw.get("derecho"), node, "right"))
+            stack.append((raw.get("izquierdo"), node, "left"))
 
-    def __validate_bst_order(self, node, lower=None, upper=None) -> list:
-        # Checked against every ancestor's bound, not just the immediate
-        # parent section 14 requires this, a local check is not enough.
-        if node is None:
-            return []
-        key = node.getKey().as_tuple
-        errors = []
-        if lower is not None and key <= lower:
-            errors.append(f"Event {node.getEventId()}: key {key} violates BST order.")
-        if upper is not None and key >= upper:
-            errors.append(f"Event {node.getEventId()}: key {key} violates BST order.")
-        errors += self.__validate_bst_order(node.getLeft(), lower, key)
-        errors += self.__validate_bst_order(node.getRight(), key, upper)
-        return errors
-
-    def __validate_stored_metadata(self, root) -> list:
-        errors = []
-
-        def compute(node):
-            if node is None:
-                return -1  # height of an empty subtree (section 14)
-            left_h = compute(node.getLeft())
-            right_h = compute(node.getRight())
-            real_height = 1 + max(left_h, right_h)
-            real_bf = left_h - right_h
-
-            if node.getHeight() is not None and node.getHeight() != real_height:
-                errors.append(f"Event {node.getEventId()}: stored height does not match the real one.")
-            if node.getBalanceFactor() is not None and node.getBalanceFactor() != real_bf:
-                errors.append(f"Event {node.getEventId()}: stored balance factor does not match the real one.")
-            return real_height
-
-        compute(root)
-        return errors
+        return root, errors
 
     # ------------------------------------------------------------------
     # Save
