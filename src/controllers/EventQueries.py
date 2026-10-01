@@ -110,10 +110,6 @@ class EventQueries:
     # ------------------------------------------------------------------
     def event_associations(self, event_id: int, active_events: dict, archived_events: dict,
                             get_candidates, get_reference) -> QueryResult:
-        """
-        active_events / archived_events: {event_id: Event}. Section 7 says
-        associations consider active AND archived events, but not eliminated.
-        """
         catalogue = {**active_events, **archived_events}
         event = catalogue.get(event_id)
         if event is None:
@@ -128,7 +124,10 @@ class EventQueries:
             nodes_examined += 1
             if other_id == event_id:
                 continue
-            if get_reference(other_event) is event:
+            
+            # CORRECCIÓN: Comparar por getEventId() en lugar de la identidad física `is`
+            other_ref = get_reference(other_event)
+            if other_ref is not None and other_ref.getEventId() == event.getEventId():
                 referenced_by.append(other_event)
 
         summary = AssociationsSummary(
@@ -164,7 +163,7 @@ class EventQueries:
         nodes_examined = 0
 
         if root is None:
-            return QueryResult([], 0, "El Ã¡rbol estÃ¡ vacÃ­o.")
+            return QueryResult([], 0, "El arbol esat vacio.")
 
         # Each stack entry carries (node, depth). The root has depth 0
         # (section 9).
@@ -194,7 +193,7 @@ class EventQueries:
         nodes_examined = 0
 
         if root is None:
-            return QueryResult([], 0, "El Ã¡rbol estÃ¡ vacÃ­o.")
+            return QueryResult([], 0, "El arbol esta vacio")
 
         stack = [root]
         while stack:
