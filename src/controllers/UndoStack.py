@@ -2,7 +2,7 @@ class UndoStack:
     """Placeholder mÃ­nimo mientras el equipo define la representaciÃ³n real
     del historial de deshacer (ver decisiones de diseÃ±o abiertas). Solo
     existe para que Scenery pueda instanciarse y probarse â€” no implementa
-    undo() todavÃ­a, solo registra quÃ© pasÃ³.
+    undo() todavÃ­a, solo registra que pasa.
 
     Nadie mÃ¡s en el dump del proyecto define esta clase, asÃ­ que
     Scenery.create_event no podÃ­a ni ejecutarse en pruebas sin esto.

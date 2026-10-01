@@ -1,6 +1,6 @@
 import streamlit as st
 
-from src.views.styles.theme import PAGE_CSS
+from src.presentation.styles.theme import PAGE_CSS
 
 
 def apply_page_config():

@@ -7,11 +7,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import streamlit as st
 
-from src.views.pages.page_config import apply_page_config
-from src.views.pages.session_state import init_session_state
-from src.views.pages.scenario_load_page import render_scenario_load_page
-from src.views.views.tree_view import render_tree
-from src.views.views.history_view import render_historic, render_undo_redo_controls
+from src.presentation.pages.page_config import apply_page_config
+from src.presentation.pages.session_state import init_session_state
+from src.presentation.pages.scenario_load_page import render_scenario_load_page
+from src.presentation.views.tree_view import render_tree
+from src.presentation.views.history_view import render_historic, render_undo_redo_controls
 
 
 def main():

@@ -4,7 +4,7 @@ import os
 import streamlit as st
 
 from src.controllers.Topologyio import TopologyIO
-from src.views.views.error_view import render_errors
+from src.presentation.views.error_view import render_errors
 
 
 def render_scenario_load_page():
