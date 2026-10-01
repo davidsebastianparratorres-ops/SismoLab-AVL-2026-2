@@ -63,7 +63,7 @@ class TreeAuditor:
                 report.add(
                     event_id,
                     IssueCategory.UNIQUENESS,
-                    "Este nodo es alcanzable desde más de una posición (nodo compartido o ciclo)."
+                    "Este nodo es alcanzable desde mÃ¡s de una posiciÃ³n (nodo compartido o ciclo)."
                 )
                 continue  # Do not traverse deeper: prevents infinite loops in cycles
             visited_nodes.add(id(node))
@@ -72,7 +72,7 @@ class TreeAuditor:
                 report.add(
                     event_id,
                     IssueCategory.UNIQUENESS,
-                    "Este identificador de evento aparece en más de un nodo del árbol."
+                    "Este identificador de evento aparece en mÃ¡s de un nodo del Ã¡rbol."
                 )
             seen_ids.add(event_id)
             traversal.append(node)
@@ -86,7 +86,7 @@ class TreeAuditor:
                 report.add(
                     event_id,
                     IssueCategory.REFERENCE,
-                    f"El enlace al padre está mal: debería apuntar a {expected_str}.",
+                    f"El enlace al padre estÃ¡ mal: deberÃ­a apuntar a {expected_str}.",
                 )
 
             key_tuple = node.getKey().as_tuple
@@ -94,7 +94,7 @@ class TreeAuditor:
                 report.add(
                     event_id,
                     IssueCategory.ORDER,
-                    f"La clave {key_tuple} debería ser mayor que{lower_bound}.",
+                    f"La clave {key_tuple} deberÃ­a ser mayor que{lower_bound}.",
                 )
             if upper_bound is not None and key_tuple >= upper_bound:
                 report.add(
@@ -121,7 +121,7 @@ class TreeAuditor:
                 report.add(
                     event_id,
                     IssueCategory.REFERENCE,
-                    "El nodo apunta a un evento que no está en el catálogo activo."
+                    "El nodo apunta a un evento que no estÃ¡ en el catÃ¡logo activo."
                 )
                 continue
 
@@ -155,25 +155,25 @@ class TreeAuditor:
                 report.add(
                     event_id,
                     IssueCategory.REFERENCE,
-                    f"La llave del catálogo ({event_id}) no coincide con el id propio del evento  ({event.getEventId()}).",
+                    f"La llave del catÃ¡logo ({event_id}) no coincide con el id propio del evento  ({event.getEventId()}).",
                 )
             if event_id not in seen_ids:
                 report.add(
                     event_id,
                     IssueCategory.REFERENCE,
-                    "Evento activo que no tiene ningún nodo en el árbol."
+                    "Evento activo que no tiene ningÃºn nodo en el Ã¡rbol."
                 )
             if event_id in archived_ids:
                 report.add(
                     event_id,
                     IssueCategory.UNIQUENESS,
-                    "El identificador está activo y archivado a la vez."
+                    "El identificador estÃ¡ activo y archivado a la vez."
                 )
             if event_id in eliminated_ids:
                 report.add(
                     event_id,
                     IssueCategory.UNIQUENESS,
-                    "El identificador está activo y eliminado a la vez."
+                    "El identificador estÃ¡ activo y eliminado a la vez."
                 )
 
     
@@ -228,7 +228,7 @@ class TreeAuditor:
                     report.add(
                         event_id,
                         IssueCategory.EXPECTED_IMBALANCE,
-                        f"El factor de balance {actual_bf} supera los límites de AVL (esperado durante el modo de estrés).",
+                        f"El factor de balance {actual_bf} supera los lÃ­mites de AVL (esperado durante el modo de estrÃ©s).",
                         Severity.INFO  
                     )
                 else:

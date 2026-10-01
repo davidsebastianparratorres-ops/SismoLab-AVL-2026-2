@@ -1,5 +1,5 @@
 from src.models.Association import Association
-from src.controllers.AssociationRules import is_candidate, choose_reference
+from src.rules.AssociationRules import is_candidate, choose_reference
 
 class AssociationManager:
 
@@ -20,7 +20,7 @@ class AssociationManager:
     def _all_eligible_events(self):
         # "Se consideran eventos activos y archivados, pero no eliminados" (section 7)
         # BUG FIX: was self.catalog.active_events / archived_events, but the
-        # constructor never set self.catalog — only self.scenery exists
+        # constructor never set self.catalog â€” only self.scenery exists
         # (as _find_event_by_id already correctly used). Raised
         # AttributeError on every call.
         events = list(self.scenery.active_events.values())

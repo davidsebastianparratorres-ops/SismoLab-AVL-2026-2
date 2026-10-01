@@ -1,7 +1,7 @@
 import json
 
-from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
-from src.controllers.EventValidator import validate_ranges
+from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
+from src.rules.EventValidator import validate_ranges
 from src.models.Node import Node
 from src.models.Key import Key
 from src.models.Event import Event
@@ -128,7 +128,7 @@ class TopologyIO:
 
     def __validate_bst_order(self, node, lower=None, upper=None) -> list:
         # Checked against every ancestor's bound, not just the immediate
-        # parent — section 14 requires this, a local check is not enough.
+        # parent â€” section 14 requires this, a local check is not enough.
         if node is None:
             return []
         key = node.getKey().as_tuple

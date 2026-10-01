@@ -1,0 +1,6 @@
+
+class EventStatus:
+    ACTIVE = "ACTIVE"
+    ARCHIVED = "ARCHIVED"
+    ELIMINATED = "ELIMINATED"
+    UNKNOWN = "UNKNOWN"

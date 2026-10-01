@@ -30,12 +30,12 @@ class SimulationClock:
 
     def __init__(self, start_time: datetime):
         if not isinstance(start_time, datetime) or start_time.tzinfo is None:
-            raise ValueError("La hora de inicio del reloj debe ser un objeto datetime con información de zona horaria.")
+            raise ValueError("La hora de inicio del reloj debe ser un objeto datetime con informaciÃ³n de zona horaria.")
         self._current_time = start_time.astimezone(timezone.utc).replace(microsecond=0)
 
     @property
     def current_time(self) -> datetime:
-        # Solo lectura: el único modo de cambiarlo es advance() o restore().
+        # Solo lectura: el Ãºnico modo de cambiarlo es advance() o restore().
         return self._current_time
 
     def advance(self, delta: timedelta) -> list:
@@ -45,7 +45,7 @@ class SimulationClock:
         if delta <= timedelta(0):
             return ["El reloj solo puede avanzar una cantidad positiva."]
         if delta.microseconds != 0:
-            return ["El avance del reloj debe ser un número entero de segundos."]
+            return ["El avance del reloj debe ser un nÃºmero entero de segundos."]
         self._current_time = self._current_time + delta
         return []
 
@@ -76,8 +76,8 @@ class SimulationClock:
     def from_dict(data) -> tuple:
         #Returns a tuple (clock, errors). If errors exist, clock is None.
         if not isinstance(data, dict) or "current_time" not in data:
-            return None, ["La sección del reloj debe contener 'current_time'."]
+            return None, ["La secciÃ³n del reloj debe contener 'current_time'."]
         try:
             return SimulationClock(parse_iso_utc(data["current_time"])), []
         except ValueError as error:
-            return None, [" Hora no válida: " + str(error)]
+            return None, [" Hora no vÃ¡lida: " + str(error)]

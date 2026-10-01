@@ -35,13 +35,13 @@ class SimulationParameters:
         #Validates parameter values. Returns a list of error messages (empty list = valid)
         errors = []
         if not SimulationParameters._is_positive_number(w):
-            errors.append("W (horas) debe ser un número finito mayor que 0.")
+            errors.append("W (horas) debe ser un nÃºmero finito mayor que 0.")
         if not SimulationParameters._is_positive_number(r):
-            errors.append("R (km) debe ser un número finito mayor que 0.")
+            errors.append("R (km) debe ser un nÃºmero finito mayor que 0.")
         if not (isinstance(l, int) and not isinstance(l, bool) and l >= 0):
-            errors.append("L debe ser un número entero mayor o igual a 0.")
+            errors.append("L debe ser un nÃºmero entero mayor o igual a 0.")
         if not SimulationParameters._is_positive_number(t):
-            errors.append("T (horas) debe ser un número finito mayor que 0.")
+            errors.append("T (horas) debe ser un nÃºmero finito mayor que 0.")
         return errors
 
     def update(self, w=None, r=None, l=None, t=None) -> list:
@@ -87,10 +87,10 @@ class SimulationParameters:
     def from_dict(data) -> tuple:
         #Returns a tuple (parameters, errors). If errors exist, parameters is None.
         if not isinstance(data, dict):
-            return None, ["La sección de parámetros debe ser un objeto."]
+            return None, ["La secciÃ³n de parÃ¡metros debe ser un objeto."]
         missing = [key for key in ("W", "R", "L", "T") if key not in data]
         if missing:
-            return None, ["Parámetros faltantes: " + ", ".join(missing) + "."]
+            return None, ["ParÃ¡metros faltantes: " + ", ".join(missing) + "."]
         errors = SimulationParameters.validate(data["W"], data["R"], data["L"], data["T"])
         if errors:
             return None, errors

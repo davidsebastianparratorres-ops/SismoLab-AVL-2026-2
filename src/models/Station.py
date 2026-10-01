@@ -16,5 +16,3 @@ class Station:
 
     def setName(self, name):
         self.__name = name
-
-    

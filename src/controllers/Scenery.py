@@ -2,12 +2,12 @@
 from src.models.Event import Event
 from src.models.Key import Key
 from src.models.Point import Point
-from src.controllers.EventLookupResult import EventLookupResult
-from src.controllers.EventStatus import EventStatus
-from src.controllers.AttetionStatus import AttetionStatus
-from src.controllers.EventValidator import validate_event_input
-from src.controllers.OperationResult import OperationResult
-from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
+from src.dto.EventLookupResult import EventLookupResult
+from src.models.EventStatus import EventStatus
+from src.models.AttetionStatus import AttetionStatus
+from src.rules.EventValidator import validate_event_input
+from src.dto.OperationResult import OperationResult
+from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
 class Scenery:
 
     def __init__(self, zones, stations, simulation_clock, tree, undo_stack, parameters):
@@ -73,7 +73,7 @@ class Scenery:
         )
 
         # BUG FIX: was Key(event.priority, event.magnitude, event.event_id)
-        # — none of those exist on Event as plain attributes (private,
+        # â€” none of those exist on Event as plain attributes (private,
         # only exposed via getPriority()/getMagnitude()/getEventId()).
         # This raised AttributeError on every single create_event() call.
         key = Key(event.getPriority(), event.getMagnitude(), event.getEventId())
@@ -83,7 +83,7 @@ class Scenery:
         self.undo_stack.push_creation(event_id)
 
         # Associations, metrics and visualization updates are wired in
-        # once GestorAsociaciones and the metrics module exist — left as
+        # once GestorAsociaciones and the metrics module exist â€” left as
         # the next piece to build.
 
         return OperationResult(True, "Event " + str(event_id) + " created with priority " + str(priority) + ".", event)
@@ -100,7 +100,7 @@ class Scenery:
         errors = self.simulation_clock.advance(delta)
         if errors:
             return OperationResult(False, " ".join(errors))
-        return OperationResult(True, "Reloj adelantado con éxito.")
+        return OperationResult(True, "Reloj adelantado con Ã©xito.")
 
     def update_parameters(self, w=None, r=None, l=None, t=None):
          #Updates simulation parameters (W, R, L, T) atomically.
@@ -126,7 +126,7 @@ class Scenery:
         event = self.active_events[event_id]
         # BUG FIX: was `event.status = AttetionStatus.REVIEWED`, which
         # created a brand new public "status" attribute instead of
-        # touching the private __status — getStatus() kept returning
+        # touching the private __status â€” getStatus() kept returning
         # PENDING forever. Also, the function fell off the end without a
         # return, so callers got None instead of an OperationResult.
         event.setStatus(AttetionStatus.REVIEWED)
