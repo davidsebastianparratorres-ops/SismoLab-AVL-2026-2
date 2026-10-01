@@ -1,0 +1,53 @@
+Vamos con la comparación completa, criterio por criterio, anclada a lo que realmente pasa en este proyecto (no en abstracto).
+
+## 1. Eficiencia al deshacer (velocidad de la operación en sí)
+
+**`UndoStack` (Command):** el costo depende de qué tan compleja sea la reversa de cada acción. Deshacer una creación es barato (borrar un nodo). Pero deshacer una **corrección que cambió la clave** significa relocalizar el nodo con la clave nueva y reinsertarlo con la vieja — y deshacer un **archivo masivo con rebalanceo** significa, en teoría, aplicar las rotaciones inversas en el orden exacto contrario a como ocurrieron. Esto último es genuinamente difícil de hacer bien: no basta con "rotar al revés", hay que llevar un registro exacto de qué rotaciones pasaron y en qué orden para deshacerlas una por una correctamente.
+
+**`HistoryManager` (Memento):** siempre es lo mismo, sin importar qué tan compleja fue la acción original — restaurar la foto guardada. Deshacer un archivo masivo con 10 rotaciones cuesta exactamente igual que deshacer una creación simple: el costo de restaurar.
+
+## 2. Costo en memoria
+
+**`UndoStack`:** cada entrada es diminuta — un tipo de acción y un ID (`("CREATION", 45)`). El costo total para N acciones es **independiente del tamaño del árbol**, siempre barato.
+
+**`HistoryManager`:** cada entrada pesa lo que pese la foto completa del escenario en ese momento. Si el árbol tiene 5.000 nodos, cada snapshot potencialmente carga con ese peso — exactamente el problema que ya discutimos hace tiempo con `copy.deepcopy()` del proyecto viejo. Se puede aliviar si cada pieza tiene su propio `copy()` liviano (como ya hacen `SimulationClock`/`SimulationParameters`), pero mientras el árbol no tenga su propio `copy()` eficiente, esta es la desventaja real y concreta de `HistoryManager`.
+
+## 3. Costo por tipo de acción (qué tan caro es *implementar* cada reversa)
+
+Este es el punto donde la diferencia se vuelve más seria.
+
+**`UndoStack`:** hay que escribir y probar, **a mano, una por una**, la reversa de cada tipo de acción: crear → deshacer borra; corregir → deshacer debe guardar los datos viejos y reinsertar con la clave anterior; archivo masivo → deshacer debe reconstruir exactamente la forma del árbol de antes, rotación por rotación. Cada acción nueva que se agregue al proyecto (y todavía faltan varias: reactivación, recuperación global, pasos de cola) exige escribir su propia lógica de reversa desde cero.
+
+**`HistoryManager`:** **cero costo adicional por acción nueva**. No importa qué tan rara o compleja sea una acción futura — mientras `snapshot_factory` capture ese pedazo de estado, ya es deshacible automáticamente, sin escribir una sola línea extra específica para esa acción.
+
+## 4. Costo de integración y mantenimiento
+
+**`UndoStack`:** para poder calcular correctamente la reversa de cada acción, necesita **conocer los internals** de casi todos los módulos (árbol, histórico, cola) — se vuelve una clase que depende de todo, lo cual va justo en contra de lo que veníamos cuidando con SOLID (Dependency Inversion, bajo acoplamiento).
+
+**`HistoryManager`:** no conoce nada de nadie — solo llama a dos funciones que alguien más le entrega (`snapshot_factory`/`snapshot_restorer`). El acoplamiento queda en un solo lugar (quien arma esas dos funciones), no repartido por toda la clase de deshacer.
+
+## 5. Practicidad para este proyecto específico — el argumento que más pesa
+
+Acá hay algo que vale la pena señalar directamente: la sección 13 del enunciado dice textualmente:
+
+> *"Cada paso de procesamiento de la cola también constituye una acción. Al deshacerlo se restablecen tanto el escenario como la posición del reporte en la cola, incluso si ese paso había descartado un reporte."*
+
+Piensa en lo que pide esto: deshacer un paso donde un reporte **se descartó** (ni siquiera modificó el árbol) tiene que devolver ese reporte a su posición exacta en la cola. Con el patrón Command, ¿cuál sería la "acción inversa" de un descarte? No hay ningún cambio de árbol que revertir — la única forma real de cumplir esto es guardando **cómo estaba la cola antes**, que es ni más ni menos que una foto parcial del estado. O sea, para cumplir este único requisito, `UndoStack` terminaría reinventando por su cuenta una mini versión de Memento solo para la cola — mientras que `HistoryManager` ya lo resuelve gratis, porque la cola sería sencillamente uno de los campos que entran en la foto completa.
+
+Esto me hace pensar que **el propio enunciado está pensado en términos de restaurar estado completo**, no de revertir acciones una por una — el vocabulario de la sección 13 es "se restablece el estado anterior exacto, incluida la topología", no "se deshace el efecto de la acción".
+
+## Resumen en tabla
+
+| Criterio | `UndoStack` (Command) | `HistoryManager` (Memento) |
+|---|---|---|
+| Velocidad al deshacer | Variable, puede ser complejo (rotaciones) | Constante, siempre "restaurar foto" |
+| Memoria por acción | Muy baja, fija | Depende del tamaño del snapshot |
+| Costo de implementar cada acción nueva | Alto — reversa a mano por tipo | Nulo — automático |
+| Acoplamiento / mantenimiento | Alto (necesita conocer todo) | Bajo (solo dos funciones externas) |
+| Encaja con "deshacer paso de cola descartado" (sección 13) | Difícil, casi obliga a reinventar snapshots | Directo, gratis |
+
+## Mi lectura honesta
+
+`UndoStack` gana claramente en memoria para acciones simples, pero pierde fuerte en las otras cuatro dimensiones — y el requisito de la cola (sección 13) es casi una prueba de que el enunciado espera algo tipo Memento. El riesgo real de `UndoStack` no es que esté "mal", es que a medida que se agreguen las piezas que faltan (archivo masivo, recuperación global, reactivación), el costo de escribir reversas correctas para cada una va a crecer rápido y con alto riesgo de bugs sutiles (sobre todo en rotaciones).
+
+Con esto ya tienes argumentos concretos y no solo una preferencia para llevarle la conversación a tu compañero. ¿Seguimos con eso, o quieres que exploremos un híbrido antes (por ejemplo, que `UndoStack` guarde snapshots pequeños por acción en vez de lógica inversa a mano)?

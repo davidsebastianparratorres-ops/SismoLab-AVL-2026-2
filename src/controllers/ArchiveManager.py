@@ -1,5 +1,4 @@
-from src.controllers.PriorityCalculator import calculate_priority
-from src.controllers.ZoneLocator import belongs_to_populated_zone
+from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
 from src.controllers.AttetionStatus import AttetionStatus
 
 
@@ -17,7 +16,7 @@ class ArchiveManager:
         priority = calculate_priority(magnitude, depth, is_populated)
 
         archived_event.setMagnitude(magnitude)
-        archived_event.setDepth(depth)
+        archived_event.setDepth_km(depth)
         archived_event.setEpicenter(epicenter)
         archived_event.setOcurredAt(ocurred_at)
         archived_event.setPriority(priority)

@@ -49,3 +49,19 @@ class Historic:
 
     def is_known(self, event_id: int) -> bool:
         return self.is_archived(event_id) or self.is_eliminated(event_id)
+    
+    # ------------------------------------------------------------------
+    # Undo || Snapshot state management — same pattern as SimulationClock
+    # and SimulationParameters, so the whole scenario snapshots itself
+    # piece by piece instead of relying on a blind deepcopy.
+    # ------------------------------------------------------------------
+ 
+    def copy(self) -> "Historic":
+        clone = Historic()
+        clone.__archived_events = dict(self.__archived_events)
+        clone.__eliminated_ids = set(self.__eliminated_ids)
+        return clone
+ 
+    def restore(self, snapshot: "Historic") -> None:
+        self.__archived_events = dict(snapshot.__archived_events)
+        self.__eliminated_ids = set(snapshot.__eliminated_ids)
