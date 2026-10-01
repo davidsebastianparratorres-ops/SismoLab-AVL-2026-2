@@ -2,7 +2,7 @@ import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
 from src.controllers.EventQueries import EventQueries
-from src.rules.AssociationManage import AssociationManager
+from src.controllers.AssociationManager import AssociationManager
 
 from src.presentation.styles.theme import (
     TREE_NORMAL_NODE_COLOR,

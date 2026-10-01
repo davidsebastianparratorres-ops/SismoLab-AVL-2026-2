@@ -1,12 +1,12 @@
 from src.models.Event import Event
 from src.models.Key import Key
 from src.models.Point import Point
-from src.controllers.EventLookupResult import EventLookupResult
-from src.controllers.EventStatus import EventStatus
-from src.controllers.AttetionStatus import AttetionStatus
-from src.controllers.EventValidator import validate_event_input
-from src.controllers.OperationResult import OperationResult
-from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
+from src.dto.EventLookupResult import EventLookupResult
+from src.models.EventStatus import EventStatus
+from src.models.AttetionStatus import AttetionStatus
+from src.rules.EventValidator import validate_event_input
+from src.dto.OperationResult import OperationResult
+from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
 from src.controllers.HistoryManager import HistoryManager
 from src.controllers.ScenarioSnapshot import take_snapshot, restore_snapshot
 

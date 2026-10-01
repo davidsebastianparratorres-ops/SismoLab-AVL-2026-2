@@ -1,7 +1,7 @@
 import json
 
-from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
-from src.controllers.EventValidator import validate_ranges
+from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
+from src.rules.EventValidator import validate_ranges
 from src.controllers.TreeAuditor import TreeAuditor
 from src.models.Node import Node
 from src.models.Key import Key
