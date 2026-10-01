@@ -1,12 +1,13 @@
 import json
 
-from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
-from src.rules.EventValidator import validate_ranges
+from src.controllers.EventRules import belongs_to_populated_zone, calculate_priority
+from src.controllers.EventValidator import validate_ranges
+from src.controllers.TreeAuditor import TreeAuditor
 from src.models.Node import Node
 from src.models.Key import Key
 from src.models.Event import Event
 from src.models.Point import Point
-from src.controllers.TreeAuditor import TreeAuditor
+from src.models.SimulationClock import parse_iso_utc, format_iso_utc
 
 
 class LoadResult:
@@ -43,7 +44,7 @@ class TopologyIO:
         errors.extend(event_errors)
 
         seen_ids = set()
-        root, tree_errors = self.__build_node(data.get("arbol"), events, seen_ids, parent=None)
+        root, tree_errors = self.__build_node(data.get("arbol"), events, seen_ids)
         errors.extend(tree_errors)
 
         for orphan_id in set(events.keys()) - seen_ids:
@@ -70,6 +71,12 @@ class TopologyIO:
                 errors.extend(range_errors)
                 continue
 
+            try:
+                occurred_at = parse_iso_utc(raw["ocurredAt"])
+            except ValueError as error:
+                errors.append(f"Event {event_id}: invalid ocurredAt — {error}")
+                continue
+
             epicenter = Point(raw["epicenter"]["x"], raw["epicenter"]["y"])
             is_populated = belongs_to_populated_zone(epicenter, zones)
             expected_priority = calculate_priority(raw["magnitude"], raw["depth"], is_populated)
@@ -89,35 +96,50 @@ class TopologyIO:
                 status=raw["status"],
                 associatedEvents=list(raw.get("associatedEvents", [])),
                 stations=list(raw.get("stations", [])),
-                ocurredAt=raw["ocurredAt"],
+                ocurredAt=occurred_at,
                 priority=raw["priority"],
                 review=raw["review"],
             )
 
         return events, errors
 
-    def __build_node(self, raw_node, events: dict, seen_ids: set, parent) -> tuple:
-        if raw_node is None:
+    def __build_node(self, raw_root, events: dict, seen_ids: set):
+        if raw_root is None:
             return None, []
 
-        event_id = raw_node["event_id"]
-        if event_id not in events:
-            return None, [f"Node references event_id {event_id}, which is not in 'eventos'."]
-        if event_id in seen_ids:
-            return None, [f"Event {event_id} appears in more than one tree position."]
-        seen_ids.add(event_id)
+        errors = []
+        root = None
+        # Explicit stack instead of recursion: a stress-mode topology can be
+        # a long degenerate chain of thousands of nodes, which would blow
+        # Python's recursion limit right when loading matters most.
+        stack = [(raw_root, None, None)]  # (raw_node, parent_node, side)
 
-        raw_key = raw_node["key"]
-        if raw_key["identifier"] != event_id:
-            return None, [
-                f"Node event_id ({event_id}) does not match its own key identifier "
-                f"({raw_key['identifier']})."
-            ]
+        while stack:
+            raw, parent, side = stack.pop()
+            if raw is None:
+                continue
 
-        node = Node(Key(raw_key["priority"], raw_key["magnitude"], raw_key["identifier"]), event_id)
-        node.setParent(parent)
-        node.setHeight(raw_node.get("altura"))
-        node.setBalanceFactor(raw_node.get("factorEquilibrio"))
+            event_id = raw["event_id"]
+            if event_id not in events:
+                errors.append(f"Node references event_id {event_id}, which is not in 'eventos'.")
+                continue
+            if event_id in seen_ids:
+                errors.append(f"Event {event_id} appears in more than one tree position.")
+                continue
+
+            raw_key = raw["key"]
+            if raw_key["identifier"] != event_id:
+                errors.append(
+                    f"Node event_id ({event_id}) does not match its own key identifier "
+                    f"({raw_key['identifier']})."
+                )
+                continue
+            seen_ids.add(event_id)
+
+            node = Node(Key(raw_key["priority"], raw_key["magnitude"], raw_key["identifier"]), event_id)
+            node.setParent(parent)
+            node.setHeight(raw.get("altura"))
+            node.setBalanceFactor(raw.get("factorEquilibrio"))
 
         left, left_errors = self.__build_node(raw_node.get("izquierdo"), events, seen_ids, node)
         right, right_errors = self.__build_node(raw_node.get("derecho"), events, seen_ids, node)
@@ -174,17 +196,39 @@ class TopologyIO:
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
-    def __node_to_dict(self, node):
-        if node is None:
+    def __node_to_dict(self, root):
+        if root is None:
             return None
+
+        root_dict = self.__node_shell(root)
+        stack = [(root, root_dict)]
+
+        while stack:
+            node, node_dict = stack.pop()
+
+            left = node.getLeft()
+            if left is not None:
+                left_dict = self.__node_shell(left)
+                node_dict["izquierdo"] = left_dict
+                stack.append((left, left_dict))
+
+            right = node.getRight()
+            if right is not None:
+                right_dict = self.__node_shell(right)
+                node_dict["derecho"] = right_dict
+                stack.append((right, right_dict))
+
+        return root_dict
+
+    def __node_shell(self, node) -> dict:
         key = node.getKey()
         return {
             "event_id": node.getEventId(),
             "key": {"priority": key.priority, "magnitude": key.magnitude, "identifier": key.identifier},
             "altura": node.getHeight(),
             "factorEquilibrio": node.getBalanceFactor(),
-            "izquierdo": self.__node_to_dict(node.getLeft()),
-            "derecho": self.__node_to_dict(node.getRight()),
+            "izquierdo": None,
+            "derecho": None,
         }
 
     def __events_to_dict(self, events: dict) -> dict:
@@ -196,7 +240,7 @@ class TopologyIO:
                 "status": event.getStatus(),
                 "associatedEvents": list(event.getAssociatedEvents()),
                 "stations": list(event.getStations()),
-                "ocurredAt": event.getOcurredAt(),
+                "ocurredAt": format_iso_utc(event.getOcurredAt()),
                 "priority": event.getPriority(),
                 "review": event.getReview(),
             }
