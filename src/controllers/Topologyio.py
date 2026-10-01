@@ -128,7 +128,7 @@ class TopologyIO:
 
     def __validate_bst_order(self, node, lower=None, upper=None) -> list:
         # Checked against every ancestor's bound, not just the immediate
-        # parent â€” section 14 requires this, a local check is not enough.
+        # parent section 14 requires this, a local check is not enough.
         if node is None:
             return []
         key = node.getKey().as_tuple

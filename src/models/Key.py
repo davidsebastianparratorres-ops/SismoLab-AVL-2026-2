@@ -11,7 +11,7 @@ class Key:
     @classmethod
     def from_event(cls, event):
         # BUG FIX: was reading event.priority / event.magnitude /
-        # event.identifier â€” none of which exist on Event (private
+        # event.identifier none of which exist on Event (private
         # attributes, only exposed via getPriority()/getMagnitude()/
         # getEventId()).
         return cls(event.getPriority(), event.getMagnitude(), event.getEventId())

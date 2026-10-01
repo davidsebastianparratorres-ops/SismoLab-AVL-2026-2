@@ -8,7 +8,7 @@ class Zone:
         # BUG FIX: EventRules.belongs_to_populated_zone reads zone.populated,
         # but this attribute didn't exist anywhere on Zone. It only went
         # unnoticed because the GUI currently always loads an empty zones
-        # list (see the TODO in scenario_load_page.py) â€” as soon as a real
+        # list (see the TODO in scenario_load_page.py) as soon as a real
         # Zone is constructed for a test, the old code raised AttributeError.
         self.__populated = populated
 

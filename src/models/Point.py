@@ -20,7 +20,7 @@ class Point:
 
     def distance_to(self, other: "Point") -> float:
         # BUG FIX: AssociationRules.is_candidate / _is_better_candidate call
-        # epicenter.distance_to(...), but Point never defined this method â€”
+        # epicenter.distance_to(...), but Point never defined this method
         # every association candidate check raised AttributeError. Plain
         # Euclidean distance in km, matching the x/y (km) range used by
         # EventValidator.

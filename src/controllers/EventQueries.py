@@ -63,7 +63,7 @@ class EventQueries:
     def events_by_magnitude_range(self, root, active_events: dict,
                                    magnitude_min: float, magnitude_max: float) -> QueryResult:
         """
-        Cost: the tree's key is K = (priority, magnitude, id) â€” sorted
+        Cost: the tree's key is K = (priority, magnitude, id) sorted
         FIRST by priority, magnitude only breaks ties. Two events with the
         same magnitude but different priority can end up anywhere in the
         tree relative to each other, so it cannot be pruned using a
@@ -155,7 +155,7 @@ class EventQueries:
         the root to locate an existing event.
 
         Cost: finding ALL high-priority events with costly access requires
-        a full scan, O(n) in the worst case â€” there is no way to prune by
+        a full scan, O(n) in the worst case there is no way to prune by
         K, because priority alone does not determine depth in the tree
         (the AVL only guarantees the BST order, not where each priority
         group physically sits).

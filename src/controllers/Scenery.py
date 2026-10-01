@@ -73,7 +73,7 @@ class Scenery:
         )
 
         # BUG FIX: was Key(event.priority, event.magnitude, event.event_id)
-        # â€” none of those exist on Event as plain attributes (private,
+        # none of those exist on Event as plain attributes (private,
         # only exposed via getPriority()/getMagnitude()/getEventId()).
         # This raised AttributeError on every single create_event() call.
         key = Key(event.getPriority(), event.getMagnitude(), event.getEventId())
@@ -83,7 +83,7 @@ class Scenery:
         self.undo_stack.push_creation(event_id)
 
         # Associations, metrics and visualization updates are wired in
-        # once GestorAsociaciones and the metrics module exist â€” left as
+        # once GestorAsociaciones and the metrics module exist left as
         # the next piece to build.
 
         return OperationResult(True, "Event " + str(event_id) + " created with priority " + str(priority) + ".", event)
@@ -126,7 +126,7 @@ class Scenery:
         event = self.active_events[event_id]
         # BUG FIX: was `event.status = AttetionStatus.REVIEWED`, which
         # created a brand new public "status" attribute instead of
-        # touching the private __status â€” getStatus() kept returning
+        # touching the private __status  getStatus() kept returning
         # PENDING forever. Also, the function fell off the end without a
         # return, so callers got None instead of an OperationResult.
         event.setStatus(AttetionStatus.REVIEWED)
