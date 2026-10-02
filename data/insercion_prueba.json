@@ -1,0 +1,10 @@
+{
+  "tipo": "INSERCION",
+  "eventos": [
+    { "event_id": 20, "magnitude": 5.0, "depth": 15.0, "epicenter": { "x": 200.0, "y": 300.0 }, "ocurredAt": "2026-09-07T10:00:00Z", "stations": ["EST-01"] },
+    { "event_id": 40, "magnitude": 4.6, "depth": 25.0, "epicenter": { "x": 150.0, "y": 250.0 }, "ocurredAt": "2026-09-07T09:40:00Z", "stations": ["EST-02"] },
+    { "event_id": 30, "magnitude": 3.0, "depth": 10.0, "epicenter": { "x": 100.0, "y": 100.0 }, "ocurredAt": "2026-09-07T08:15:00Z", "stations": ["EST-01", "EST-03"] },
+    { "event_id": 10, "magnitude": 6.5, "depth": 12.0, "epicenter": { "x": 500.0, "y": 600.0 }, "ocurredAt": "2026-09-07T11:05:00Z", "stations": ["EST-04"] },
+    { "event_id": 50, "magnitude": 7.0, "depth": 8.0,  "epicenter": { "x": 520.0, "y": 610.0 }, "ocurredAt": "2026-09-07T11:20:00Z", "stations": ["EST-04", "EST-05"] }
+  ]
+}
