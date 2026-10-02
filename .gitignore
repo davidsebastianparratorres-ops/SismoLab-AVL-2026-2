@@ -2,4 +2,4 @@ venv/
 __pycache__/
 *.pyc
 .env
-.proyecto.txt
+proyecto.txt
