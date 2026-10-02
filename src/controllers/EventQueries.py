@@ -1,5 +1,7 @@
 from src.models.AttetionStatus import AttetionStatus
-from src.dto.QueryResult import QueryResult, CostlyAccessEntry, AssociationsSummary
+from src.models.EventStatus import EventStatus
+from src.models.Key import Key
+from src.dto.QueryResult import QueryResult, CostlyAccessEntry, AssociationsSummary, EventDetail
 from src.models.SimulationClock import parse_iso_utc
 
 
@@ -107,6 +109,54 @@ class EventQueries:
     # What THIS method builds on its own is the reverse index
     # (referenced_by), because that only requires scanning the catalogue,
     # not knowing the selection rule.
+    # ------------------------------------------------------------------
+    # Query: full detail of one event (current data, review, stations,
+    # priority, key, status, node depth/height/balance factor, associations).
+    # ------------------------------------------------------------------
+    def event_detail(self, event_id: int, tree, active_events: dict, archived_events: dict,
+                      eliminated_ids: set, get_candidates, get_reference) -> QueryResult:
+        """Composes get_event's location logic, Tree.locate_node_info for the
+        node's own depth/height/balance factor, and event_associations for
+        the association summary - instead of duplicating any of their logic.
+
+        get_candidates/get_reference: same adapter callables used by
+        event_associations, e.g. lambdas wrapping AssociationManager's
+        get_candidates_and_reference(event_id).
+        """
+        if event_id in eliminated_ids:
+            return QueryResult([], 0, f"Event {event_id} was eliminated.")
+
+        catalogue = {**active_events, **archived_events}
+        event = catalogue.get(event_id)
+        if event is None:
+            return QueryResult([], 0, f"Event {event_id} does not exist.")
+
+        is_active = event_id in active_events
+        key_tuple = (event.getPriority(), event.getMagnitude(), event.getEventId())
+
+        # Archived events leave the active AVL (section 7), so they simply
+        # have no node, depth, height or balance factor to report.
+        node_depth = node_height = balance_factor = None
+        nodes_examined = 0
+        if is_active:
+            node_depth, node_height, balance_factor = tree.locate_node_info(Key(*key_tuple))
+            nodes_examined = node_depth + 1 if node_depth is not None else 0
+
+        association_result = self.event_associations(
+            event_id, active_events, archived_events, get_candidates, get_reference)
+        nodes_examined += association_result.nodes_examined
+
+        detail = EventDetail(
+            event=event,
+            location_status=EventStatus.ACTIVE if is_active else EventStatus.ARCHIVED,
+            key=key_tuple,
+            node_depth=node_depth,
+            node_height=node_height,
+            balance_factor=balance_factor,
+            associations=association_result.events[0],
+        )
+        return QueryResult([detail], nodes_examined, f"Event {event_id}: full detail retrieved.")
+
     # ------------------------------------------------------------------
     def event_associations(self, event_id: int, active_events: dict, archived_events: dict,
                             get_candidates, get_reference) -> QueryResult:

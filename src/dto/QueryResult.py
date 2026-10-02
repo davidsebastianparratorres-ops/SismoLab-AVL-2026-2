@@ -29,6 +29,29 @@ class CostlyAccessEntry:
 
 
 @dataclass
+class EventDetail:
+    #Full lookup of a single event: current data, where it lives, its
+    #position in the AVL (active events only), and its associations.
+
+        #event (object): The event itself (current/vigente data).
+        #location_status (str): EventStatus.ACTIVE or EventStatus.ARCHIVED.
+        #key (tuple): (priority, magnitude, identifier) - the same tuple used
+        #    to order and locate the event in the tree.
+        #node_depth / node_height / balance_factor: None for archived events,
+        #    since archived events are removed from the active AVL.
+        #associations (AssociationsSummary): candidates, chosen reference,
+        #    and who references this event back.
+
+    event: object
+    location_status: str
+    key: tuple
+    node_depth: object
+    node_height: object
+    balance_factor: object
+    associations: "AssociationsSummary"
+
+
+@dataclass
 class AssociationsSummary:
     #Data structure summarizing reference relationships for a given event.
 

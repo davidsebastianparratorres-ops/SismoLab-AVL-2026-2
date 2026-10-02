@@ -132,6 +132,32 @@ class Scenery:
         event.setStatus(AttetionStatus.REVIEWED)
         return OperationResult(True, "Event " + str(event_id) + " marked as reviewed.", event)
 
+    def delete_event(self, event_id: int) -> OperationResult:
+        """Marks an event as retired: out of the active catalog, out of the
+        active AVL, and its id becomes non-reusable (create_event already
+        checks eliminated_ids). Only active events can be deleted - an
+        archived or already-eliminated id is rejected.
+
+        Note for whoever wires this in: unlike create_event, this does not
+        touch AssociationManager. Other events may have had this one as
+        their chosen reference, so the caller should run
+        association_manager.recalculate_all() right after a successful
+        deletion (recalculate_for_event() alone is not enough, since it
+        only recomputes the deleted event's own - now gone - association).
+        """
+        if event_id not in self.active_events:
+            return OperationResult(False, "Event " + str(event_id) + " is not an active event.")
+
+        event = self.active_events[event_id]
+        key = Key(event.getPriority(), event.getMagnitude(), event.getEventId())
+
+        self.history.record()
+        self.tree.delete(key)
+        del self.active_events[event_id]
+        self.eliminated_ids.add(event_id)
+
+        return OperationResult(True, "Event " + str(event_id) + " eliminated.", event)
+
     def undo(self) -> OperationResult:
         if not self.history.undo():
             return OperationResult(False, "No hay acciones para deshacer.")
