@@ -17,6 +17,12 @@ def parse_iso_utc(text: str) -> datetime:
     # Convert to UTC and strip microseconds for second-level precision.
     return value.astimezone(timezone.utc).replace(microsecond=0)
 
+def ensure_datetime(value):
+    """Accepts a datetime or an ISO 8601 string and always returns an
+    aware UTC datetime. Single normalization point for events that come
+    from different loaders."""
+    return parse_iso_utc(value) if isinstance(value, str) else value
+
 #Converts a datetime into an ISO 8601 UTC string with second-level precision.
 def format_iso_utc(value: datetime) -> str:
     return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -30,7 +36,7 @@ class SimulationClock:
 
     def __init__(self, start_time: datetime):
         if not isinstance(start_time, datetime) or start_time.tzinfo is None:
-            raise ValueError("La hora de inicio del reloj debe ser un objeto datetime con informaciÃ³n de zona horaria.")
+            raise ValueError("La hora de inicio del reloj debe ser un objeto datetime con información de zona horaria.")
         self._current_time = start_time.astimezone(timezone.utc).replace(microsecond=0)
 
     @property
@@ -38,16 +44,22 @@ class SimulationClock:
         # Solo lectura: el Ãºnico modo de cambiarlo es advance() o restore().
         return self._current_time
 
-    def advance(self, delta: timedelta) -> list:
-        # Read-only: can only be modified via advance() or restore().
-        if not isinstance(delta, timedelta):
-            return ["El avance del reloj debe ser un intervalo de tiempo."]
-        if delta <= timedelta(0):
-            return ["El reloj solo puede avanzar una cantidad positiva."]
-        if delta.microseconds != 0:
-            return ["El avance del reloj debe ser un nÃºmero entero de segundos."]
-        self._current_time = self._current_time + delta
-        return []
+    @staticmethod
+    def validate_advance(delta) -> list:
+            if not isinstance(delta, timedelta):
+                return ["El avance del reloj debe ser un intervalo de tiempo."]
+            if delta <= timedelta(0):
+                return ["El reloj solo puede avanzar una cantidad positiva."]
+            if delta.microseconds != 0:
+                return ["El avance del reloj debe ser un número entero de segundos."]
+            return []
+    
+    def advance(self, delta) -> list:
+            errors = self.validate_advance(delta)
+            if errors:
+                return errors
+            self._current_time = self._current_time + delta
+            return []
 
     # Event age calculations (Sections 10 and 11) 
     def age_seconds(self, occurred_at: datetime) -> int:
@@ -80,4 +92,6 @@ class SimulationClock:
         try:
             return SimulationClock(parse_iso_utc(data["current_time"])), []
         except ValueError as error:
-            return None, [" Hora no vÃ¡lida: " + str(error)]
+            return None, [" Hora no válida: " + str(error)]
+        
+    

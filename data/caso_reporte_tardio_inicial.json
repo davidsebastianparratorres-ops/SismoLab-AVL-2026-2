@@ -1,0 +1,109 @@
+{
+  "tipo": "ESCENARIO",
+  "version": 1,
+  "modo": "NORMAL",
+  "reloj": {
+    "current_time": "2026-09-07T12:00:00Z"
+  },
+  "parametros": {
+    "W": 48.0,
+    "R": 40.0,
+    "L": 3,
+    "T": 72.0
+  },
+  "metricas": {
+    "corrections_accepted": 0,
+    "reports_discarded": 0,
+    "conflicts": 0,
+    "mass_archives": 0,
+    "events_archived": 0,
+    "case_LL": 0,
+    "case_RR": 0,
+    "case_LR": 0,
+    "case_RL": 0,
+    "rotations_left": 0,
+    "rotations_right": 0
+  },
+  "zonas": [
+    {
+      "x_min": 0.0,
+      "x_max": 500.0,
+      "y_min": 0.0,
+      "y_max": 1000.0,
+      "populated": false
+    },
+    {
+      "x_min": 500.0,
+      "x_max": 1000.0,
+      "y_min": 0.0,
+      "y_max": 1000.0,
+      "populated": true
+    }
+  ],
+  "estaciones": {
+    "EST-01": "Norte"
+  },
+  "arbol": {
+    "event_id": 1,
+    "key": {
+      "priority": 2,
+      "magnitude": 5.6,
+      "identifier": 1
+    },
+    "altura": 1,
+    "factorEquilibrio": 1,
+    "izquierdo": {
+      "event_id": 2,
+      "key": {
+        "priority": 1,
+        "magnitude": 4.2,
+        "identifier": 2
+      },
+      "altura": 0,
+      "factorEquilibrio": 0,
+      "izquierdo": null,
+      "derecho": null
+    },
+    "derecho": null
+  },
+  "eventos_activos": {
+    "1": {
+      "magnitude": 5.6,
+      "depth": 10.0,
+      "epicenter": {
+        "x": 100.0,
+        "y": 100.0
+      },
+      "status": "PENDING",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-09-07T10:00:00Z",
+      "priority": 2,
+      "review": 1
+    },
+    "2": {
+      "magnitude": 4.2,
+      "depth": 10.0,
+      "epicenter": {
+        "x": 105.0,
+        "y": 100.0
+      },
+      "status": "PENDING",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-09-07T10:20:00Z",
+      "priority": 1,
+      "review": 1
+    }
+  },
+  "historico": {
+    "archivados": {},
+    "eliminados": []
+  },
+  "asociaciones": {
+    "2": 1
+  },
+  "extras": {}
+}

@@ -1,11 +1,7 @@
-from src.models.SimulationClock import parse_iso_utc
+from src.models.SimulationClock import  ensure_datetime
 
 
-def _as_datetime(value):
-    """occurred_at may be stored as a datetime or as an ISO 8601 string,
-    same situation as EventQueries._as_datetime. Normalizes either into a
-    comparable datetime."""
-    return parse_iso_utc(value) if isinstance(value, str) else value
+
 
 
 def hours_between(earlier_time, later_time):
@@ -24,8 +20,8 @@ def is_candidate(candidate_event, target_event, max_hours, max_distance_km):
     if candidate_event.getMagnitude() <= target_event.getMagnitude():
         return False
 
-    candidate_time = _as_datetime(candidate_event.getOcurredAt())
-    target_time = _as_datetime(target_event.getOcurredAt())
+    candidate_time = ensure_datetime(candidate_event.getOcurredAt())
+    target_time = ensure_datetime(target_event.getOcurredAt())
     if candidate_time >= target_time:
         return False
 
@@ -56,9 +52,9 @@ def _is_better_candidate(candidate, current_best, target_event):
     if candidate.getMagnitude() != current_best.getMagnitude():
         return candidate.getMagnitude() > current_best.getMagnitude()
 
-    target_time = _as_datetime(target_event.getOcurredAt())
-    candidate_time_diff = hours_between(_as_datetime(candidate.getOcurredAt()), target_time)
-    best_time_diff = hours_between(_as_datetime(current_best.getOcurredAt()), target_time)
+    target_time = ensure_datetime(target_event.getOcurredAt())
+    candidate_time_diff = hours_between(ensure_datetime(candidate.getOcurredAt()), target_time)
+    best_time_diff = hours_between(ensure_datetime(current_best.getOcurredAt()), target_time)
     if candidate_time_diff != best_time_diff:
         return candidate_time_diff < best_time_diff
 

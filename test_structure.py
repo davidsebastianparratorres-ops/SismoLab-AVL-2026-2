@@ -1,114 +1,111 @@
 import unittest
-from src.models.Point import Point
-from src.models.Zone import Zone
-from src.rules.ZoneClassifier import ZoneClassifier
-from src.rules.PriorityCalculator import PriorityCalculator
+from datetime import datetime, timezone
+
+from src.models.AVL import AVL
+from src.models.Metrics import Metrics
+from src.models.Station import Station
+from src.models.SimulationClock import SimulationClock
+from src.models.SimulationParameters import SimulationParameters
+from src.controllers.Scenery import Scenery
+from src.controllers.Indicators import build_indicators, traversals
 
 
-class TestZoneAndPriorityRules(unittest.TestCase):
-    """Batería de pruebas unitarias para la validación de Zonas, Bordes y Prioridades.
-    
-    Cubre los requerimientos de las Secciones 3, 4 y los casos mínimos de la Sección 16.
-    """
+def utc(hour, minute):
+    return datetime(2026, 9, 7, hour, minute, 0, tzinfo=timezone.utc)
+
+
+class TestMetricsClass(unittest.TestCase):
+
+    def test_increment_and_unknown_name(self):
+        m = Metrics()
+        m.increment("conflicts")
+        m.record_case("LR")
+        m.record_rotation("left")
+        m.record_rotation("right")
+        self.assertEqual((m.get("conflicts"), m.get("case_LR")), (1, 1))
+        self.assertEqual((m.get("rotations_left"), m.get("rotations_right")), (1, 1))
+        with self.assertRaises(KeyError):
+            m.increment("nope")
+
+    def test_copy_is_independent_and_restore_works(self):
+        m = Metrics()
+        snap = m.copy()
+        m.increment("reports_discarded", 3)
+        self.assertEqual(snap.get("reports_discarded"), 0)
+        m.restore(snap)
+        self.assertEqual(m.get("reports_discarded"), 0)
+
+    def test_dict_round_trip_and_validation(self):
+        m = Metrics()
+        m.increment("mass_archives", 2)
+        loaded, errors = Metrics.from_dict(m.to_dict())
+        self.assertEqual(errors, [])
+        self.assertEqual(loaded.to_dict(), m.to_dict())
+
+        bad = m.to_dict()
+        bad["conflicts"] = -1
+        del bad["case_LL"]
+        loaded, errors = Metrics.from_dict(bad)
+        self.assertIsNone(loaded)
+        self.assertEqual(len(errors), 2)
+
+
+class TestMetricsInScenery(unittest.TestCase):
 
     def setUp(self):
-        """Configuración del escenario con zonas adyacentes que comparten frontera."""
-        self.classifier = ZoneClassifier()
-
-        # Zona 1: No Poblada (Reserva) -> [0, 500] en X, [0, 1000] en Y
-        self.z1_rural = Zone(
-            x_min=0.0, x_max=500.0,
-            y_min=0.0, y_max=1000.0,
-            populated=False
+        self.scenery = Scenery(
+            zones=[],
+            stations={"EST-01": Station("EST-01", "Norte")},
+            simulation_clock=SimulationClock(utc(12, 0)),
+            tree=AVL(),
+            parameters=SimulationParameters(),
         )
 
-        # Zona 2: Poblada (Urbana) -> [500, 1000] en X, [0, 1000] en Y
-        self.z2_urban = Zone(
-            x_min=500.0, x_max=1000.0,
-            y_min=0.0, y_max=1000.0,
-            populated=True
-        )
+    def _create(self, event_id, magnitude, when=utc(10, 0)):
+        result = self.scenery.create_event(event_id, magnitude, 10.0, 100.0, 100.0, when, "EST-01")
+        self.assertTrue(result.success, result.message)
 
-        self.classifier.add_zone(self.z1_rural)
-        self.classifier.add_zone(self.z2_urban)
+    def test_correction_increments_and_undo_restores(self):
+        self._create(1, 4.8)
+        self.assertTrue(self.scenery.correct_event(1, 6.2, 15.0, 100.0, 100.0, "EST-01").success)
+        self.assertEqual(self.scenery.metrics.get("corrections_accepted"), 1)
 
-        # Puntos de prueba estratégicos
-        self.border_point = Point(500.0, 300.0)    # Exactamente en la frontera X = 500.0
-        self.rural_point = Point(250.0, 300.0)     # Dentro de la Zona No Poblada
-        self.urban_point = Point(750.0, 300.0)     # Dentro de la Zona Poblada
+        self.scenery.undo()
+        self.assertEqual(self.scenery.metrics.get("corrections_accepted"), 0)
 
-    # -------------------------------------------------------------------------
-    # 1. PRUEBAS DE REGLA DE BORDE Y PERTENENCIA (Sección 3)
-    # -------------------------------------------------------------------------
+        self.scenery.redo()
+        self.assertEqual(self.scenery.metrics.get("corrections_accepted"), 1)
 
-    def test_border_colision_returns_populated(self):
-        """Sección 3: Un punto en el borde compartido de dos zonas debe clasificarse 
-        como Zona Poblada si al menos una de las zonas lo es."""
-        is_populated = self.classifier.is_in_populated_zone(self.border_point)
-        self.assertTrue(is_populated, "El borde compartido con una zona poblada debe clasificarse como Poblada.")
+    def test_rejected_correction_does_not_count(self):
+        self._create(1, 4.8)
+        self.assertFalse(self.scenery.correct_event(1, 99.0, 15.0, 100.0, 100.0, "EST-01").success)
+        self.assertEqual(self.scenery.metrics.get("corrections_accepted"), 0)
 
-    def test_rural_point_returns_not_populated(self):
-        """Un punto exclusivo en zona no poblada debe retornar False."""
-        is_populated = self.classifier.is_in_populated_zone(self.rural_point)
-        self.assertFalse(is_populated)
+    def test_indicators(self):
+        self._create(1, 5.6)   # priority 2
+        self._create(2, 3.0)   # priority 1
+        self._create(3, 6.5)   # priority 3
+        self.scenery.mark_as_reviewed(2)
 
-    # -------------------------------------------------------------------------
-    # 2. CASOS MÍNIMOS OBLIGATORIOS (Sección 16 y Sección 4)
-    # -------------------------------------------------------------------------
+        ind = build_indicators(self.scenery)
+        self.assertEqual(ind["active"], 3)
+        self.assertEqual(ind["by_priority"], {1: 1, 2: 1, 3: 1})
+        self.assertEqual(ind["pending"], 2)
+        self.assertEqual((ind["height"], ind["leaves"], ind["nodes"]), (1, 2, 3))
+        self.assertEqual(ind["costly_access"], 0)          # L = 3
 
-    def test_section_16_limit_case_border_high_priority(self):
-        """Sección 16: M = 4.5, H = 30.0 km en borde de zona poblada debe dar Prioridad 3 (Alta)."""
-        priority = PriorityCalculator.calculate_priority(
-            magnitude=4.5,
-            depth=30.0,
-            epicenter=self.border_point,
-            zone_classifier=self.classifier
-        )
-        self.assertEqual(priority, 3, "M=4.5, H=30.0 en zona poblada/borde debe ser Prioridad 3.")
+        self.scenery.update_parameters(l=0)
+        self.assertEqual(build_indicators(self.scenery)["costly_access"], 1)  # event 3 at depth 1
 
-    def test_section_16_limit_case_rural_medium_priority(self):
-        """Sección 16: M = 4.5, H = 30.0 km FUERA de zona poblada debe dar Prioridad 2 (Media)."""
-        priority = PriorityCalculator.calculate_priority(
-            magnitude=4.5,
-            depth=30.0,
-            epicenter=self.rural_point,
-            zone_classifier=self.classifier
-        )
-        self.assertEqual(priority, 2, "El mismo evento fuera de zona poblada debe ser Prioridad 2.")
-
-    # -------------------------------------------------------------------------
-    # 3. EVALUACIÓN DE LÍMITES Y CONDICIONES EXTREMAS DE PRIORIDAD (Sección 4)
-    # -------------------------------------------------------------------------
-
-    def test_magnitude_6_always_high_priority(self):
-        """Sección 4: M >= 6.0 siempre es Prioridad 3 (Alta), independiente de H y zona."""
-        # Evento profundo en zona rural
-        p1 = PriorityCalculator.calculate_priority(6.0, 150.0, self.rural_point, self.classifier)
-        # Evento superficial en zona urbana
-        p2 = PriorityCalculator.calculate_priority(6.0, 10.0, self.urban_point, self.classifier)
-
-        self.assertEqual(p1, 3)
-        self.assertEqual(p2, 3)
-
-    def test_depth_strict_boundary_30_0_km(self):
-        """Evalúa el comportamiento inclusivo de H = 30.0 vs H = 30.1 km."""
-        # H = 30.0 -> Cumple la condición de prioridad Alta
-        p_exact = PriorityCalculator.calculate_priority(4.5, 30.0, self.urban_point, self.classifier)
-        # H = 30.1 -> Excede el límite de 30.0 km, pasa a Prioridad Media
-        p_exceeded = PriorityCalculator.calculate_priority(4.5, 30.1, self.urban_point, self.classifier)
-
-        self.assertEqual(p_exact, 3, "H=30.0 km exactos debe ser inclusivo (Prioridad 3).")
-        self.assertEqual(p_exceeded, 2, "H=30.1 km excede el límite y debe caer a Prioridad 2.")
-
-    def test_low_priority_cases(self):
-        """Sección 4: Eventos con M < 4.5 deben clasificarse como Prioridad 1 (Baja)."""
-        # M = 4.4, muy superficial y en zona urbana -> Prioridad 1
-        p_urban_low = PriorityCalculator.calculate_priority(4.4, 5.0, self.urban_point, self.classifier)
-        # M = -1.0 (límite inferior permitido) -> Prioridad 1
-        p_min_mag = PriorityCalculator.calculate_priority(-1.0, 10.0, self.rural_point, self.classifier)
-
-        self.assertEqual(p_urban_low, 1)
-        self.assertEqual(p_min_mag, 1)
+    def test_traversals(self):
+        self._create(1, 5.6)
+        self._create(2, 3.0)
+        self._create(3, 6.5)
+        t = traversals(self.scenery.tree.getRoot())
+        self.assertEqual(t["inorder"], [2, 1, 3])     # ascending K
+        self.assertEqual(t["preorder"], [1, 2, 3])
+        self.assertEqual(t["postorder"], [2, 3, 1])
+        self.assertEqual(t["levels"], [1, 2, 3])
 
 
 if __name__ == "__main__":

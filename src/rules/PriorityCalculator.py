@@ -1,27 +1,9 @@
-from src.models.Point import Point
-from src.rules.ZoneClassifier import ZoneClassifier
+from src.rules.EventRules import calculate_priority as _calculate_priority
 
 
 class PriorityCalculator:
-    #Deterministic priority calculator based on the strict order of Section 4.
-
+    # Thin facade: the rule lives only in EventRules.
     @staticmethod
-    def calculate_priority(magnitude: float, depth: float, epicenter: Point, zone_classifier: ZoneClassifier) -> int:
-        
-          #Derives the event priority (3: High, 2: Medium, 1: Low).
-
-
+    def calculate_priority(magnitude, depth, epicenter, zone_classifier):
         is_populated = zone_classifier.is_in_populated_zone(epicenter)
-
-        # Priority 3 (High): M ≥ 6.0; or M ≥ 4.5 and H ≤ 30.0 km in a populated area.
-        if magnitude >= 6.0:
-            return 3
-        if magnitude >= 4.5 and depth <= 30.0 and is_populated:
-            return 3
-
-        # Priority 2 (Medium): Not High and M >= 4.5.
-        if magnitude >= 4.5:
-            return 2
-
-        # Priority 1 (Low): Any other case.
-        return 1
+        return _calculate_priority(magnitude, depth, is_populated)

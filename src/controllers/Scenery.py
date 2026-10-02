@@ -9,6 +9,10 @@ from src.dto.OperationResult import OperationResult
 from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
 from src.controllers.HistoryManager import HistoryManager
 from src.controllers.ScenarioSnapshot import take_snapshot, restore_snapshot
+from src.controllers.AssociationManager import AssociationManager
+from src.models.SimulationParameters import SimulationParameters
+from src.models.SimulationClock import SimulationClock
+from src.models.Metrics import Metrics
 
 
 class Scenery:
@@ -22,6 +26,8 @@ class Scenery:
         self.archived_events = {}
         self.eliminated_ids = set()
         self.parameters = parameters
+        self.association_manager = AssociationManager(self)
+        self.metrics = Metrics()
         # Memento-style undo/redo: record() takes a full snapshot before a
         # change, instead of each action writing its own inverse by hand.
         self.history = HistoryManager(lambda: take_snapshot(self), lambda s: restore_snapshot(self, s))
@@ -77,6 +83,7 @@ class Scenery:
         self.history.record()
         self.tree.insert(key, event.getEventId())
         self.active_events[event_id] = event
+        self.association_manager.recalculate_all()
 
         # Associations, metrics and visualization updates are wired in
         # once GestorAsociaciones and the metrics module exist left as
@@ -93,20 +100,26 @@ class Scenery:
         return OperationResult(True, "Access depth limit updated to " + str(new_limit) + ".")
 
     def advance_clock(self, delta):
-        self.history.record()
-        errors = self.simulation_clock.advance(delta)
+        errors = SimulationClock.validate_advance(delta)
         if errors:
-            self.history.undo()
             return OperationResult(False, " ".join(errors))
-        return OperationResult(True, "Reloj adelantado con Ã©xito.")
+        self.history.record()
+        self.simulation_clock.advance(delta)
+        return OperationResult(True, "Reloj adelantado con éxito.")
 
     def update_parameters(self, w=None, r=None, l=None, t=None):
-        self.history.record()
-        errors = self.parameters.update(w=w, r=r, l=l, t=t)
+        p = self.parameters
+        errors = SimulationParameters.validate(
+            p.w if w is None else w, p.r if r is None else r,
+            p.l if l is None else l, p.t if t is None else t)
         if errors:
-            self.history.undo()
             return OperationResult(False, " ".join(errors))
-        return OperationResult(True, "Parameters updated.")
+        self.history.record()
+        self.parameters.update(w=w, r=r, l=l, t=t)
+        if w is not None or r is not None:
+            self.association_manager.recalculate_all()
+        return OperationResult(True, "Parámetros actualizados.")
+
 
     def get_event(self, event_id):
         if event_id in self.active_events:
@@ -155,6 +168,7 @@ class Scenery:
         self.tree.delete(key)
         del self.active_events[event_id]
         self.eliminated_ids.add(event_id)
+        self.association_manager.recalculate_all()
 
         return OperationResult(True, "Event " + str(event_id) + " eliminated.", event)
 
@@ -215,6 +229,8 @@ class Scenery:
 
         self.tree.delete(old_key)
         self.tree.insert(new_key, event_id)
+        self.association_manager.recalculate_all()
+        self.metrics.increment("corrections_accepted")
 
         return OperationResult(True, "Event " + str(event_id) + " corrected with priority "
                                 + str(new_priority) + ".", event)

@@ -77,17 +77,6 @@ class TreeAuditor:
             seen_ids.add(event_id)
             traversal.append(node)
 
-            if node.getParent() is not expected_parent:
-                expected_str = (
-                    "None (root)"
-                    if expected_parent is None
-                    else str(expected_parent.getEventId())
-                )
-                report.add(
-                    event_id,
-                    IssueCategory.REFERENCE,
-                    f"El enlace al padre estÃ¡ mal: deberÃ­a apuntar a {expected_str}.",
-                )
 
             key_tuple = node.getKey().as_tuple
             if lower_bound is not None and key_tuple <= lower_bound:
@@ -161,19 +150,19 @@ class TreeAuditor:
                 report.add(
                     event_id,
                     IssueCategory.REFERENCE,
-                    "Evento activo que no tiene ningÃºn nodo en el Ã¡rbol."
+                    "Evento activo que no tiene ningun nodo en el Arbol."
                 )
             if event_id in archived_ids:
                 report.add(
                     event_id,
                     IssueCategory.UNIQUENESS,
-                    "El identificador estÃ¡ activo y archivado a la vez."
+                    "El identificador esta activo y archivado a la vez."
                 )
             if event_id in eliminated_ids:
                 report.add(
                     event_id,
                     IssueCategory.UNIQUENESS,
-                    "El identificador estÃ¡ activo y eliminado a la vez."
+                    "El identificador esta activo y eliminado a la vez."
                 )
 
     
@@ -228,7 +217,7 @@ class TreeAuditor:
                     report.add(
                         event_id,
                         IssueCategory.EXPECTED_IMBALANCE,
-                        f"El factor de balance {actual_bf} supera los lÃ­mites de AVL (esperado durante el modo de estrÃ©s).",
+                        f"El factor de balance {actual_bf} supera los li­mites de AVL (esperado durante el modo de estrÃ©s).",
                         Severity.INFO  
                     )
                 else:

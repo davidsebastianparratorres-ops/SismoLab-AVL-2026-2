@@ -1,0 +1,163 @@
+{
+  "tipo": "ESCENARIO",
+  "version": 1,
+  "modo": "NORMAL",
+  "reloj": {
+    "current_time": "2026-09-07T12:00:00Z"
+  },
+  "parametros": {
+    "W": 48.0,
+    "R": 40.0,
+    "L": 3,
+    "T": 72.0
+  },
+  "metricas": {
+    "corrections_accepted": 1,
+    "reports_discarded": 0,
+    "conflicts": 0,
+    "mass_archives": 0,
+    "events_archived": 0,
+    "case_LL": 0,
+    "case_RR": 0,
+    "case_LR": 0,
+    "case_RL": 0,
+    "rotations_left": 0,
+    "rotations_right": 0
+  },
+  "zonas": [
+    {
+      "x_min": 0.0,
+      "x_max": 500.0,
+      "y_min": 0.0,
+      "y_max": 1000.0,
+      "populated": false
+    },
+    {
+      "x_min": 500.0,
+      "x_max": 1000.0,
+      "y_min": 0.0,
+      "y_max": 1000.0,
+      "populated": true
+    }
+  ],
+  "estaciones": {
+    "EST-01": "Norte"
+  },
+  "arbol": {
+    "event_id": 3,
+    "key": {
+      "priority": 3,
+      "magnitude": 6.1,
+      "identifier": 3
+    },
+    "altura": 2,
+    "factorEquilibrio": 1,
+    "izquierdo": {
+      "event_id": 1,
+      "key": {
+        "priority": 2,
+        "magnitude": 5.6,
+        "identifier": 1
+      },
+      "altura": 1,
+      "factorEquilibrio": -1,
+      "izquierdo": null,
+      "derecho": {
+        "event_id": 5,
+        "key": {
+          "priority": 3,
+          "magnitude": 4.6,
+          "identifier": 5
+        },
+        "altura": 0,
+        "factorEquilibrio": 0,
+        "izquierdo": null,
+        "derecho": null
+      }
+    },
+    "derecho": {
+      "event_id": 2,
+      "key": {
+        "priority": 3,
+        "magnitude": 6.2,
+        "identifier": 2
+      },
+      "altura": 0,
+      "factorEquilibrio": 0,
+      "izquierdo": null,
+      "derecho": null
+    }
+  },
+  "eventos_activos": {
+    "1": {
+      "magnitude": 5.6,
+      "depth": 10.0,
+      "epicenter": {
+        "x": 100.0,
+        "y": 100.0
+      },
+      "status": "PENDING",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-09-07T10:01:00Z",
+      "priority": 3,
+      "review": 1
+    },
+    "2": {
+      "magnitude": 6.2,
+      "depth": 15.0,
+      "epicenter": {
+        "x": 105.0,
+        "y": 100.0
+      },
+      "status": "PENDING",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-09-07T10:02:00Z",
+      "priority": 3,
+      "review": 2
+    },
+    "3": {
+      "magnitude": 6.1,
+      "depth": 10.0,
+      "epicenter": {
+        "x": 102.0,
+        "y": 100.0
+      },
+      "status": "REVIEWED",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-09-07T10:03:00Z",
+      "priority": 3,
+      "review": 1
+    },
+    "5": {
+      "magnitude": 4.6,
+      "depth": 10.0,
+      "epicenter": {
+        "x": 650.0,
+        "y": 100.0
+      },
+      "status": "PENDING",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-09-07T10:05:00Z",
+      "priority": 3,
+      "review": 1
+    }
+  },
+  "historico": {
+    "archivados": {},
+    "eliminados": [
+      4
+    ]
+  },
+  "asociaciones": {
+    "3": 2
+  },
+  "extras": {}
+}

@@ -74,6 +74,8 @@ class AssociationManager:
         for event in eligible:
             self.recalculate_for_event(event.getEventId())
 
+        self._sync_event_fields()
+
     def get_candidates_and_reference(self, event_id):
         target_event = self._find_event_by_id(event_id)
         if target_event is None:
@@ -90,3 +92,29 @@ class AssociationManager:
             if association.reference_id == event_id:
                 referencing_ids.append(replica_id)
         return referencing_ids
+        
+    def _sync_event_fields(self):
+        # Event.associatedEvents is a derived copy of self.associations:
+        # the manager is the single source of truth.
+        for event in self._all_eligible_events():
+            association = self.associations.get(event.getEventId())
+            event.setAssociatedEvents([association.reference_id] if association else [])
+
+    # --- snapshot / persistence support ---
+    def to_dict(self) -> dict:
+        """{replica_id: reference_id}"""
+        return {rid: a.reference_id for rid, a in self.associations.items()}
+
+    def restore_from(self, data: dict) -> None:
+        self.associations = {rid: Association(rid, ref) for rid, ref in data.items()}
+
+    # --- adapter for EventQueries.event_associations / event_detail ---
+    def build_callbacks(self):
+        def get_candidates(event):
+            return self.find_candidates(event)
+
+        def get_reference(event):
+            stored = self.associations.get(event.getEventId())
+            return self._find_event_by_id(stored.reference_id) if stored else None
+
+        return get_candidates, get_reference

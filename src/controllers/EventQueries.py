@@ -2,14 +2,7 @@ from src.models.AttetionStatus import AttetionStatus
 from src.models.EventStatus import EventStatus
 from src.models.Key import Key
 from src.dto.QueryResult import QueryResult, CostlyAccessEntry, AssociationsSummary, EventDetail
-from src.models.SimulationClock import parse_iso_utc
-
-
-def _as_datetime(value):
-    """occurred_at may be stored as a datetime or as an ISO 8601 string,
-    depending on where the event came from. This normalizes either into
-    a comparable datetime so range queries work regardless of the source."""
-    return parse_iso_utc(value) if isinstance(value, str) else value
+from src.models.SimulationClock import  ensure_datetime
 
 
 class EventQueries:
@@ -56,24 +49,57 @@ class EventQueries:
 
         message = f"Se encontraron {len(found)} evento(s) pendiente(s)."
         if len(found) < k:
-            message += " (habÃ­a menos pendientes que los solicitados, se muestran todos)."
+            message += " (Habi­a menos pendientes que los solicitados, se muestran todos)."
         return QueryResult(found, nodes_examined, message)
 
     # ------------------------------------------------------------------
     # Query 2a: events within an inclusive magnitude range.
     # ------------------------------------------------------------------
+
     def events_by_magnitude_range(self, root, active_events: dict,
-                                   magnitude_min: float, magnitude_max: float) -> QueryResult:
+                               magnitude_min: float, magnitude_max: float) -> QueryResult:
         """
-        Cost: the tree's key is K = (priority, magnitude, id) sorted
-        FIRST by priority, magnitude only breaks ties. Two events with the
-        same magnitude but different priority can end up anywhere in the
-        tree relative to each other, so it cannot be pruned using a
-        magnitude range: the ENTIRE tree must be visited in the worst
-        case. This query is O(n), not logarithmic.
+        The condition magnitude_min <= M <= magnitude_max is, for each priority
+        p in (1, 2, 3), one CONTIGUOUS interval of keys K = (P, M, I):
+        [(p, min, 0), (p, max, 999999)]. Each stack entry carries the open key
+        interval (lo, hi) that its subtree must live in (inherited from ALL
+        ancestors); if that interval touches none of the three, the whole
+        subtree is discarded without being visited.
+        Cost: O(h + k) on a balanced AVL (h = O(log n), k = matches);
+        O(n) worst case on a degenerate (stress mode) tree.
         """
-        return self.__full_scan(root, active_events, lambda event:
-            magnitude_min <= event.getMagnitude() <= magnitude_max)
+        if magnitude_min > magnitude_max:
+            return QueryResult([], 0, "El minimo no puede ser mayor que el maximo.")
+        if root is None:
+            return QueryResult([], 0, "El arbol esta vacio")
+
+        intervals = [((p, magnitude_min, 0), (p, magnitude_max, 999999)) for p in (1, 2, 3)]
+
+        def may_contain(lo, hi):
+            # Conservative test: only discards when certain.
+            return any((lo is None or lo < end) and (hi is None or start < hi)
+                    for start, end in intervals)
+
+        found = []
+        nodes_examined = 0
+        stack = [(root, None, None)]  # (node, lo, hi); None = unbounded
+        while stack:
+            node, lo, hi = stack.pop()
+            nodes_examined += 1
+            key = node.getKey().as_tuple
+
+            event = active_events.get(node.getEventId())
+            if event is not None and magnitude_min <= event.getMagnitude() <= magnitude_max:
+                found.append(event)
+
+            right, left = node.getRight(), node.getLeft()
+            if right is not None and may_contain(key, hi):
+                stack.append((right, key, hi))
+            if left is not None and may_contain(lo, key):
+                stack.append((left, lo, key))
+
+        message = f"Se encontraron {len(found)} evento(s) que cumplen el criterio."
+        return QueryResult(found, nodes_examined, message)
 
     # ------------------------------------------------------------------
     # Query 2b: events with hypocenter depth <= limit, within a date range.
@@ -85,11 +111,11 @@ class EventQueries:
         not part of K at all, so nothing about their order is reflected
         in the tree's shape. Full scan, O(n) in the worst case.
         """
-        date_min = _as_datetime(date_min)
-        date_max = _as_datetime(date_max)
+        date_min = ensure_datetime(date_min)
+        date_max = ensure_datetime(date_max)
 
         def matches(event):
-            occurred_at = _as_datetime(event.getOcurredAt())
+            occurred_at = ensure_datetime(event.getOcurredAt())
             return event.getDepth_km() <= depth_limit and date_min <= occurred_at <= date_max
 
         return self.__full_scan(root, active_events, matches)
@@ -196,27 +222,26 @@ class EventQueries:
     # ------------------------------------------------------------------
     def high_priority_costly_access(self, root, active_events: dict, depth_limit: int) -> QueryResult:
         """
-        A high-priority (3) event is "costly access" when its node depth
-        in the tree is strictly greater than depth_limit (L, section 9).
+        High-priority (3) events whose node depth is strictly greater than L.
+        Search cost by key = depth + 1 (section 9).
 
-        For each one found, the search cost by key is (node depth + 1),
-        exactly as section 9 defines it: the number of nodes visited from
-        the root to locate an existing event.
-
-        Cost: finding ALL high-priority events with costly access requires
-        a full scan, O(n) in the worst case there is no way to prune by
-        K, because priority alone does not determine depth in the tree
-        (the AVL only guarantees the BST order, not where each priority
-        group physically sits).
+        Safe pruning by K:
+        - Left subtree of a node with P < 3: its keys are smaller, so its
+        priorities are <= P < 3. It cannot contain any priority-3 event.
+        - A child at depth d with stored height h has its deepest descendant
+        at depth d + h; if d + h <= L nothing below can exceed L.
+        Cost: O(n) worst case (e.g. a stress-mode chain of priority-3 nodes),
+        usually far fewer nodes on a balanced AVL.
         """
+        if root is None:
+            return QueryResult([], 0, "El arbol esta vacio.")
+
+        def can_exceed_limit(child, child_depth):
+            height = child.getHeight()
+            return height is None or child_depth + height > depth_limit
+
         results = []
         nodes_examined = 0
-
-        if root is None:
-            return QueryResult([], 0, "El arbol esat vacio.")
-
-        # Each stack entry carries (node, depth). The root has depth 0
-        # (section 9).
         stack = [(root, 0)]
         while stack:
             node, depth = stack.pop()
@@ -224,13 +249,13 @@ class EventQueries:
 
             event = active_events.get(node.getEventId())
             if event is not None and event.getPriority() == 3 and depth > depth_limit:
-                search_cost = depth + 1
-                results.append(CostlyAccessEntry(event, depth, search_cost))
+                results.append(CostlyAccessEntry(event, depth, depth + 1))
 
-            if node.getRight() is not None:
-                stack.append((node.getRight(), depth + 1))
-            if node.getLeft() is not None:
-                stack.append((node.getLeft(), depth + 1))
+            right, left = node.getRight(), node.getLeft()
+            if right is not None and can_exceed_limit(right, depth + 1):
+                stack.append((right, depth + 1))
+            if left is not None and node.getKey().priority >= 3 and can_exceed_limit(left, depth + 1):
+                stack.append((left, depth + 1))
 
         message = f"Se encontraron {len(results)} evento(s) de prioridad alta con acceso costoso (L={depth_limit})."
         return QueryResult(results, nodes_examined, message)
