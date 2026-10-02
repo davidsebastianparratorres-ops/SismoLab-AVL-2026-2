@@ -3,6 +3,7 @@ import os
 import streamlit as st
 
 from src.controllers.Topologyio import TopologyIO
+from src.controllers.InsertionIO import InsertionIO
 from src.presentation.views.error_view import render_errors
 
 
@@ -28,19 +29,14 @@ def render_scenario_load_page():
 
 
 def _load_topology(filepath: str):
-    zones = st.session_state.get("scenario_zones", [])  # TODO: pendiente de definir con el equipo
+    zones = st.session_state.scenery.zones
     result = TopologyIO().load(filepath, zones)
     _apply_result(result)
 
 
 def _load_insertion(filepath: str):
-    try:
-        from src.controllers.InsertionIO import InsertionIO
-    except ImportError:
-        st.info("La carga por inserción todavía no está implementada.")
-        return
-
-    result = InsertionIO().load(filepath)
+    zones = st.session_state.scenery.zones
+    result = InsertionIO().load(filepath, zones)
     _apply_result(result)
 
 
@@ -49,7 +45,14 @@ def _apply_result(result):
         render_errors(result.errors)
         return
 
-    st.session_state.history.record()
-    st.session_state.scenario_root = result.root
-    st.session_state.scenario_events = result.events
+    # A fresh load replaces the whole scenario: every loaded event starts
+    # out active (neither TopologyIO nor InsertionIO produce archived or
+    # eliminated events), so both of those are reset too, not just the
+    # tree/events.
+    scenery = st.session_state.scenery
+    scenery.history.record()
+    scenery.tree.setRoot(result.root)
+    scenery.active_events = result.events
+    scenery.archived_events = {}
+    scenery.eliminated_ids = set()
     st.success("Escenario cargado correctamente.")

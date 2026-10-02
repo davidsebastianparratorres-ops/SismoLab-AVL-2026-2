@@ -1,10 +1,16 @@
 import streamlit as st
 
 
-def render_historic(historic):
+def render_historic(scenery):
+    # CHANGED: used to take a Historic instance (historic.get_all_archived(),
+    # historic.get_eliminated_ids()). Since Option A made Scenery the single
+    # source of truth, archived/eliminated events now live directly on
+    # Scenery (scenery.archived_events, a dict; scenery.eliminated_ids, a
+    # set) instead of a separate Historic object, so this reads them
+    # straight off scenery.
     st.markdown("### Histórico")
 
-    archived = historic.get_all_archived()
+    archived = scenery.archived_events
     if archived:
         rows = [
             {"ID": event_id, "Magnitud": event.getMagnitude(), "Estado": event.getStatus()}
@@ -14,7 +20,7 @@ def render_historic(historic):
     else:
         st.caption("No hay eventos archivados todavía.")
 
-    eliminated = historic.get_eliminated_ids()
+    eliminated = scenery.eliminated_ids
     if eliminated:
         st.markdown("**Eliminados:** " + ", ".join(str(i) for i in sorted(eliminated)))
     else:

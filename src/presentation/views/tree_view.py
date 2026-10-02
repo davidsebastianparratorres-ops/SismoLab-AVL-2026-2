@@ -1,8 +1,6 @@
 import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
-from src.controllers.EventQueries import EventQueries
-from src.controllers.AssociationManager import AssociationManager
 
 from src.presentation.styles.theme import (
     TREE_NORMAL_NODE_COLOR,
@@ -61,38 +59,16 @@ def render_tree(root, highlight_id=None):
     plt.close(fig)
 
 
-   #Queries Component Section 11
-def render_tree_queries(active_events: dict, archived_events: dict, w_hours: float = 24.0, r_km: float = 50.0):
-    """Renderiza el panel interactivo para ejecutar las consultas sobre el árbol AVL."""
-    st.divider()
-    st.subheader("Consultas de la Sección 11")
-
-    # Deferred invocation to avoid circular imports at startup
-    
-
-    tab1, tab2 = st.tabs(["Consulta de Asociaciones", "Otras Consultas"])
-
-    with tab1:
-        target_id = st.number_input("ID del evento a consultar:", min_value=1, max_value=999999, value=1, step=1)
-        
-        if st.button("Ejecutar Consulta de Asociaciones"):
-            assoc_manager = AssociationManager(max_hours=w_hours, max_distance_km=r_km)
-            get_candidates, get_reference = assoc_manager.build_callbacks(active_events, archived_events)
-            
-            queries = EventQueries()
-            result = queries.event_associations(
-                event_id=int(target_id),
-                active_events=active_events,
-                archived_events=archived_events,
-                get_candidates=get_candidates,
-                get_reference=get_reference
-            )
-
-            st.info(result.message)
-            st.metric(label="Nodos examinados en el árbol", value=result.nodes_examined)
-
-            if result.events:
-                summary = result.events[0]
-                st.write("**Referencia Elegida:**", summary.chosen_reference if summary.chosen_reference else "Ninguna")
-                st.write(f"**Candidatos en rango ({len(summary.candidates)}):**", summary.candidates)
-                st.write(f"**Eventos que lo referencian ({len(summary.referenced_by)}):**", summary.referenced_by)
+# NOTE: render_tree_queries (Section 11 query panel) used to live here,
+# but it called AssociationManager(max_hours=w_hours, max_distance_km=r_km)
+# and assoc_manager.build_callbacks(...) - neither exists anymore.
+# AssociationManager now only takes a Scenery (W and R come from
+# scenery.parameters, the single source of truth, not from constructor
+# kwargs), and there never was a build_callbacks method; the project's own
+# convention is to define get_candidates/get_reference as small local
+# functions wherever they're needed (see tests/test_04_query_event.py).
+# It also was never called from app.py, so nothing broke by removing it.
+# The full event query (data, review, stations, priority, key, status,
+# node depth/height/balance factor, associations) now lives in
+# src/presentation/pages/event_crud_page.py, built against the real,
+# current APIs: EventQueries.event_detail(...) + AssociationManager(scenery).
