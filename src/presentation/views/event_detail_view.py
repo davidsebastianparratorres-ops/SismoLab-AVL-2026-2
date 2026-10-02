@@ -22,14 +22,7 @@ def render_event_detail(detail):
     epicenter = event.getEpicenter()
     st.write("**Epicentro:**", f"({epicenter.getX()}, {epicenter.getY()})")
     st.write("**Estaciones:**", ", ".join(event.getStations()) or "Ninguna")
-    # str() instead of passing the datetime/str object directly: some
-    # Streamlit builds lazily import pandas to decide how to format
-    # non-string values passed to st.write, and on at least one machine in
-    # the team that import itself failed (a Windows "Control de
-    # aplicaciones" policy blocking one of pandas' native DLLs) - nothing
-    # to do with this project's own logic. Passing a plain string sidesteps
-    # that code path entirely.
-    st.write("**Fecha de ocurrencia:**", str(event.getOcurredAt()))
+    st.write("**Fecha de ocurrencia:**", event.getOcurredAt())
 
     st.markdown("#### Posición en el árbol")
     if detail.node_depth is None:
