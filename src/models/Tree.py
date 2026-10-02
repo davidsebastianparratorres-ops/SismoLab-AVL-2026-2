@@ -1,4 +1,5 @@
 from src.models.Node import Node
+from src.models.Metrics import Metrics
 
 
 class Tree:
@@ -7,6 +8,10 @@ class Tree:
         self.__root = root
         # Number of nodes currently stored in the tree.
         self.__size = self._count_nodes(root)
+        # Stress mode = balancing False: same BST operations, rotations deferred.
+        self.balancing = True
+        # Rotation counters; Scenery replaces it with the scenario's own Metrics.
+        self.metrics = Metrics()
 
     def getRoot(self):
         return self.__root
@@ -30,7 +35,8 @@ class Tree:
 
     def insert(self, key, event_id):
         # Insert a new node into the tree using the given key and event id.
-        self.setRoot(self._insert_recursive(self.getRoot(), key, event_id))
+        self.__root = self._insert_recursive(self.__root, key, event_id)
+        self.__size += 1  # O(1); setRoot would recount every node
 
     def _insert_recursive(self, node, key, event_id):
         # Base case: create a new node if the position is empty.
@@ -118,9 +124,12 @@ class Tree:
 
     def _count_nodes(self, node):
         # Counts all nodes in the subtree rooted at 'node'.
-        if node is None:
-            return 0
-        return 1 + self._count_nodes(node.getLeft()) + self._count_nodes(node.getRight())
+        count, stack = 0, [node] if node is not None else []
+        while stack:  # iterative: a stress-mode chain must not hit the recursion limit
+            current = stack.pop()
+            count += 1
+            stack.extend(c for c in (current.getLeft(), current.getRight()) if c is not None)
+        return count
 
     def inOrder(self):
         # In-order traversal: left -> node -> right.
@@ -169,7 +178,8 @@ class Tree:
         new_root, deleted = self._delete_recursive(self.getRoot(), key)
 
         if deleted:
-            self.setRoot(new_root)
+            self.__root = new_root
+            self.__size -= 1
 
         return deleted
 

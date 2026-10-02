@@ -29,12 +29,12 @@ class AVL(Tree):
             root.setBalanceFactor(balanceFactor)
 
     def _after_insert(self, node):
-        # Rebalance the tree after insertion.
-        return self._rebalance(node)
+        # Rebalance the tree after insertion (skipped in stress mode).
+        return self._rebalance(node) if self.balancing else node
 
     def _after_delete(self, node):
-        # Rebalance the tree after deletion.
-        return self._rebalance(node)
+        # Rebalance the tree after deletion (skipped in stress mode).
+        return self._rebalance(node) if self.balancing else node
 
     def _rebalance(self, node):
         # Get the balance factor for the current node.
@@ -45,6 +45,9 @@ class AVL(Tree):
             # Left-right case: rotate left first on the left child.
             if node.getLeft().getBalanceFactor() < 0:
                 node.setLeft(self._rotate_left(node.getLeft()))
+                self.metrics.record_case("LR")
+            else:
+                self.metrics.record_case("LL")
             return self._rotate_right(node)
 
         # Right-heavy case.
@@ -52,6 +55,9 @@ class AVL(Tree):
             # Right-left case: rotate right first on the right child.
             if node.getRight().getBalanceFactor() > 0:
                 node.setRight(self._rotate_right(node.getRight()))
+                self.metrics.record_case("RL")
+            else: 
+                self.metrics.record_case("RR")
             return self._rotate_left(node)
 
         return node
@@ -68,6 +74,7 @@ class AVL(Tree):
         # Recalculate heights.
         self._update_height(node)
         self._update_height(new_root)
+        self.metrics.record_rotation("left")
         return new_root
 
     def _rotate_right(self, node):
@@ -82,4 +89,5 @@ class AVL(Tree):
         # Recalculate heights.
         self._update_height(node)
         self._update_height(new_root)
+        self.metrics.record_rotation("right")
         return new_root

@@ -11,6 +11,7 @@ def take_snapshot(scenery) -> dict:
         "parameters": scenery.parameters.copy(),
         "associations": scenery.association_manager.to_dict(),
         "metrics": scenery.metrics.copy(),
+        "stress_mode": scenery.stress_mode,
         # Zones and stations never change while running, but a scenario load
         # replaces them, so an undo of that load must be able to bring them back.
         # They are references on purpose: nothing mutates them in place.
@@ -28,6 +29,7 @@ def restore_snapshot(scenery, snapshot: dict) -> None:
     scenery.parameters.restore(snapshot["parameters"])
     scenery.association_manager.restore_from(snapshot["associations"])
     scenery.metrics.restore(snapshot["metrics"])
+    scenery.stress_mode = snapshot["stress_mode"]
     scenery.zones = snapshot["zones"]
     scenery.stations = snapshot["stations"]
 
