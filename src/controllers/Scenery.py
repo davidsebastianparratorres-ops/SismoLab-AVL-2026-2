@@ -4,7 +4,7 @@ from src.models.Point import Point
 from src.dto.EventLookupResult import EventLookupResult
 from src.models.EventStatus import EventStatus
 from src.models.AttetionStatus import AttetionStatus
-from src.rules.EventValidator import validate_event_input
+from src.rules.EventValidator import validate_event_input, validate_ranges
 from src.dto.OperationResult import OperationResult
 from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
 from src.controllers.HistoryManager import HistoryManager
@@ -157,6 +157,67 @@ class Scenery:
         self.eliminated_ids.add(event_id)
 
         return OperationResult(True, "Event " + str(event_id) + " eliminated.", event)
+
+    def correct_event(self, event_id: int, magnitude: float, depth_km: float,
+                       epicenter_x: float, epicenter_y: float,
+                       reporting_station_id: str) -> OperationResult:
+        """Manual correction: magnitude, depth and/or epicenter can change.
+        The occurrence time and the event's identity never change - a
+        correction is a new report about the same event, not a new event.
+
+        Per spec: review is a positive integer that only ever goes up, and
+        the set of stations with accepted reports is conserved (grows),
+        it is never replaced by a single "current" station. So
+        reporting_station_id is ADDED to the existing set, not swapped in.
+
+        Priority and key can both change (priority depends on magnitude,
+        depth and the populated-zone check), so the event's node has to be
+        removed and reinserted under its new key - editing it in place
+        would leave the AVL's ordering invariant broken.
+
+        The event always returns to PENDING: whoever already reviewed the
+        previous data has not reviewed this new report yet.
+
+        Note for whoever wires this in: like delete_event, this does not
+        call AssociationManager - run recalculate_all() right after a
+        successful correction, since a changed magnitude/epicenter can
+        make this event a candidate (or stop being one) for others, not
+        just change its own chosen reference.
+        """
+        if event_id not in self.active_events:
+            return OperationResult(False, "Event " + str(event_id) + " is not an active event.")
+
+        if reporting_station_id not in self.stations:
+            return OperationResult(False, "Unknown station: " + str(reporting_station_id) + ".")
+
+        errors = validate_ranges(event_id, magnitude, depth_km, epicenter_x, epicenter_y)
+        if errors:
+            return OperationResult(False, " ".join(errors))
+
+        event = self.active_events[event_id]
+        old_key = Key(event.getPriority(), event.getMagnitude(), event.getEventId())
+
+        epicenter = Point(epicenter_x, epicenter_y)
+        is_in_populated_zone = belongs_to_populated_zone(epicenter, self.zones)
+        new_priority = calculate_priority(magnitude, depth_km, is_in_populated_zone)
+        new_key = Key(new_priority, magnitude, event_id)
+
+        self.history.record()
+
+        event.setMagnitude(magnitude)
+        event.setDepth_km(depth_km)
+        event.setEpicenter(epicenter)
+        event.setPriority(new_priority)
+        event.setReview(event.getReview() + 1)
+        event.setStatus(AttetionStatus.PENDING)
+        if reporting_station_id not in event.getStations():
+            event.getStations().append(reporting_station_id)
+
+        self.tree.delete(old_key)
+        self.tree.insert(new_key, event_id)
+
+        return OperationResult(True, "Event " + str(event_id) + " corrected with priority "
+                                + str(new_priority) + ".", event)
 
     def undo(self) -> OperationResult:
         if not self.history.undo():
