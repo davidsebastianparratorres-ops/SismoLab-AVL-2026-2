@@ -13,7 +13,7 @@ from src.controllers.AssociationManager import AssociationManager
 from src.models.SimulationParameters import SimulationParameters
 from src.models.SimulationClock import SimulationClock
 from src.models.Metrics import Metrics
-
+from src.models.Report import ReportQueue
 
 class Scenery:
 
@@ -29,6 +29,7 @@ class Scenery:
         self.association_manager = AssociationManager(self)
         self.metrics = Metrics()
         self.tree.metrics = self.metrics
+        self.queue = ReportQueue()
         # Memento-style undo/redo: record() takes a full snapshot before a
         # change, instead of each action writing its own inverse by hand.
         self.history = HistoryManager(lambda: take_snapshot(self), lambda s: restore_snapshot(self, s))
@@ -183,7 +184,8 @@ class Scenery:
 
     def correct_event(self, event_id: int, magnitude: float, depth_km: float,
                        epicenter_x: float, epicenter_y: float,
-                       reporting_station_id: str) -> OperationResult:
+                       reporting_station_id: str,
+                       occurred_at=None, review=None) -> OperationResult:
         """Manual correction: magnitude, depth and/or epicenter can change.
         The occurrence time and the event's identity never change - a
         correction is a new report about the same event, not a new event.
@@ -231,7 +233,9 @@ class Scenery:
         event.setDepth_km(depth_km)
         event.setEpicenter(epicenter)
         event.setPriority(new_priority)
-        event.setReview(event.getReview() + 1)
+        if occurred_at is not None:
+            event.setOcurredAt(occurred_at)
+        event.setReview(event.getReview() + 1 if review is None else review)
         event.setStatus(AttetionStatus.PENDING)
         if reporting_station_id not in event.getStations():
             event.getStations().append(reporting_station_id)

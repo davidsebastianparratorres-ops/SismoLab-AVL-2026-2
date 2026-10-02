@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 class HistoryManager:
     """Undo/redo stack. Doesn't know what a "snapshot" contains — the
     caller supplies snapshot_factory() (takes a full snapshot) and
@@ -10,12 +12,24 @@ class HistoryManager:
         self.__snapshot_restorer = snapshot_restorer
         self.__undo_stack = []
         self.__redo_stack = []
+        self.__grouping = False
 
     def record(self) -> None:
         # Call BEFORE applying a change — captures the state as it was
         # right before that action, so it can be restored later.
+        if self.__grouping:
+            return
         self.__undo_stack.append(self.__snapshot_factory())
         self.__redo_stack.clear()  # a new action invalidates the old redo path
+
+    @contextmanager
+    def single_action(self):
+        self.record()
+        self.__grouping = True
+        try:
+            yield
+        finally:
+            self.__grouping = False
 
     def undo(self) -> bool:
         if not self.__undo_stack:
