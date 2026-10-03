@@ -4,8 +4,3 @@ __pycache__/
 .env
 proyecto.txt
 test_structure.py
-parte1_models.txt
-parte2_controllers.txt
-parte3_data.txt
-parte4_presentation.txt
-parte5_dto_rules_tests.txt  
