@@ -14,7 +14,9 @@ def render_event_crud_page():
     # way to confirm the Scenery wiring (session_state -> Scenery ->
     # EventQueries/AssociationManager) works before adding anything that
     # mutates state. Correction and deletion tabs come next.
-    tab_query, tab_create, tab_correct = st.tabs(["Consultar", "Crear", "Corregir"])
+    tab_query, tab_create, tab_correct, tab_delete = st.tabs(
+        ["Consultar", "Crear", "Corregir", "Eliminar"]
+    )
 
     with tab_query:
         _render_query_tab()
@@ -24,6 +26,9 @@ def render_event_crud_page():
 
     with tab_correct:
         _render_correct_tab()
+
+    with tab_delete:
+        _render_delete_tab()
 
 
 def _event_detail(scenery, event_id: int):
@@ -71,7 +76,8 @@ def _render_create_tab():
         # creation will be rejected by create_event's own "Unknown
         # station" check until the team defines where stations come from.
         st.warning(
-            "No hay estaciones todavía. Cualquier creación será rechazada hasta que "
+            "No hay estaciones configuradas todavía (pendiente de definir "
+            "con el equipo). Cualquier creación será rechazada hasta que "
             "existan estaciones reales en el escenario."
         )
 
@@ -128,7 +134,8 @@ def _render_correct_tab():
 
     if not scenery.stations:
         st.warning(
-            "No hay estaciones todavía. Cualquier corrección será rechazada hasta que "
+            "No hay estaciones configuradas todavía (pendiente de definir "
+            "con el equipo). Cualquier corrección será rechazada hasta que "
             "existan estaciones reales en el escenario."
         )
 
@@ -174,3 +181,26 @@ def _render_correct_tab():
     # internally (its own docstring predates that change and still says
     # otherwise - worth a quick fix by whoever touches that file next).
     render_event_detail(_event_detail(scenery, int(event_id)).events[0])
+
+
+def _render_delete_tab():
+    scenery = st.session_state.scenery
+    event_id = st.number_input("ID del evento a eliminar", min_value=1, step=1, key="delete_event_id")
+
+    st.caption("El evento queda retirado: no se reutiliza su identificador. "
+               "Esta acción se puede revertir con el botón \"Deshacer\" general.")
+
+    if not st.button("Eliminar evento", key="delete_event_button"):
+        return
+
+    result = scenery.delete_event(int(event_id))
+
+    if not result.success:
+        st.error(result.message)
+        return
+
+    # No point calling _event_detail here: the event is now in
+    # eliminated_ids, and event_detail returns an empty result for an
+    # eliminated id by design (see EventQueries.event_detail) - the
+    # confirmation message is all there is to show.
+    st.success(result.message)
