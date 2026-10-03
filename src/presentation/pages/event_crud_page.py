@@ -4,7 +4,7 @@ import streamlit as st
 
 from src.controllers.EventQueries import EventQueries
 from src.presentation.views.event_detail_view import render_event_detail
-from src.controllers.AssociationManager import AssociationManager
+
 
 def render_event_crud_page():
     st.markdown("### Gestión de eventos")
@@ -24,22 +24,12 @@ def render_event_crud_page():
 
 
 def _event_detail(scenery, event_id: int):
-    """Shared by every tab that needs to show an event's full detail
-    (query right now; create/correct will reuse this too): builds the
-    get_candidates/get_reference adapters (same pattern used throughout
-    the project, see tests/test_04_query_event.py) and runs the real
-    EventQueries.event_detail - no duplicated query logic per tab."""
-    manager = AssociationManager(scenery)
-
-    def get_candidates(event):
-        return manager.get_candidates_and_reference(event.getEventId())[0]
-
-    def get_reference(event):
-        reference_id = manager.get_candidates_and_reference(event.getEventId())[1]
-        if reference_id is None:
-            return None
-        catalogue = {**scenery.active_events, **scenery.archived_events}
-        return catalogue.get(reference_id)
+    """Shared by every tab that needs an event's full detail. Scenery now
+    owns a single, persistent AssociationManager (scenery.association_manager,
+    see Scenery.__init__) instead of a throwaway one built per call, and it
+    already exposes the get_candidates/get_reference adapters itself via
+    build_callbacks() - no need to hand-roll them per page anymore."""
+    get_candidates, get_reference = scenery.association_manager.build_callbacks()
 
     return EventQueries().event_detail(
         event_id,
@@ -124,10 +114,8 @@ def _render_create_tab():
 
     st.success(result.message)
 
-    # Section 7: a new event can become a candidate reference for others
-    # (and can itself gain a reference), so a full recalculation runs
-    # right after - same contract already documented in
-    # Scenery.create_event/correct_event/delete_event's own comments.
-    AssociationManager(scenery).recalculate_all()
-
+    # NOTE: no explicit recalculate_all() call needed here anymore -
+    # Scenery.create_event now calls self.association_manager.recalculate_all()
+    # internally (see Scenery.py). Calling it again here would just be
+    # redundant, harmless extra work.
     render_event_detail(_event_detail(scenery, result.event.getEventId()).events[0])

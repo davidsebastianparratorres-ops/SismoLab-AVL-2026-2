@@ -60,15 +60,15 @@ def render_tree(root, highlight_id=None):
 
 
 # NOTE: render_tree_queries (Section 11 query panel) used to live here,
-# but it called AssociationManager(max_hours=w_hours, max_distance_km=r_km)
-# and assoc_manager.build_callbacks(...) - neither exists anymore.
-# AssociationManager now only takes a Scenery (W and R come from
-# scenery.parameters, the single source of truth, not from constructor
-# kwargs), and there never was a build_callbacks method; the project's own
-# convention is to define get_candidates/get_reference as small local
-# functions wherever they're needed (see tests/test_04_query_event.py).
-# It also was never called from app.py, so nothing broke by removing it.
+# but at the time it was written it called
+# AssociationManager(max_hours=w_hours, max_distance_km=r_km) and
+# assoc_manager.build_callbacks(...), neither of which existed yet back
+# then (W/R come from scenery.parameters, not constructor kwargs).
+# build_callbacks() was added later on AssociationManager itself (no args,
+# bound to the manager's own scenery) - see AssociationManager.py - so if
+# you're looking for that adapter, that's where it lives now. It also was
+# never called from app.py, so nothing broke by removing this function.
 # The full event query (data, review, stations, priority, key, status,
 # node depth/height/balance factor, associations) now lives in
-# src/presentation/pages/event_crud_page.py, built against the real,
-# current APIs: EventQueries.event_detail(...) + AssociationManager(scenery).
+# src/presentation/pages/event_crud_page.py, built against the current
+# APIs: EventQueries.event_detail(...) + scenery.association_manager.

@@ -13,7 +13,10 @@ from src.controllers.AssociationManager import AssociationManager
 from src.models.SimulationParameters import SimulationParameters
 from src.models.SimulationClock import SimulationClock
 from src.models.Metrics import Metrics
-from src.models.Report import ReportQueue
+from src.models.Zone import Zone
+from src.models.Station import Station
+from src.rules.ZoneValidator import validate_zone
+
 
 class Scenery:
 
@@ -28,23 +31,44 @@ class Scenery:
         self.parameters = parameters
         self.association_manager = AssociationManager(self)
         self.metrics = Metrics()
-        self.tree.metrics = self.metrics
-        self.queue = ReportQueue()
         # Memento-style undo/redo: record() takes a full snapshot before a
         # change, instead of each action writing its own inverse by hand.
         self.history = HistoryManager(lambda: take_snapshot(self), lambda s: restore_snapshot(self, s))
 
     @property
-    def stress_mode(self):
-        return not self.tree.balancing
-
-    @stress_mode.setter
-    def stress_mode(self, value):
-        self.tree.balancing = not value
-
-    @property
     def access_depth_limit(self):
         return self.parameters.l
+
+    def add_zone(self, x_min: float, x_max: float, y_min: float, y_max: float,
+                 populated: bool) -> OperationResult:
+        """Zones are immutable once created: no edit, no delete, only
+        addition. Still undoable, though: ScenarioSnapshot.take_snapshot
+        stores scenery.zones/stations by reference (a scenario load
+        replaces the whole list/dict, it never mutates one in place), so
+        this must do the same - replacing self.zones with a new list
+        instead of self.zones.append(...) - or an in-place append would
+        silently corrupt every snapshot taken before this call too, since
+        they would share the exact same list object.
+        """
+        errors = validate_zone(x_min, x_max, y_min, y_max, self.zones)
+        if errors:
+            return OperationResult(False, " ".join(errors))
+
+        self.history.record()
+        self.zones = [*self.zones, Zone(x_min, x_max, y_min, y_max, populated)]
+        return OperationResult(True, "Zone added.")
+
+    def add_station(self, station_id: str, name: str) -> OperationResult:
+        """Stations are immutable once created too: no edit, no delete.
+        Same reasoning as add_zone for replacing (not mutating) self.stations."""
+        if not station_id:
+            return OperationResult(False, "Station id cannot be empty.")
+        if station_id in self.stations:
+            return OperationResult(False, "Station " + station_id + " already exists.")
+
+        self.history.record()
+        self.stations = {**self.stations, station_id: Station(station_id, name)}
+        return OperationResult(True, "Station added.")
 
     def create_event(
         self,
@@ -102,9 +126,11 @@ class Scenery:
         return OperationResult(True, "Event " + str(event_id) + " created with priority " + str(priority) + ".", event)
 
     def set_access_depth_limit(self, new_limit):
-        result = self.update_parameters(l=new_limit)
-        if not result.success:
-            return result
+        self.history.record()
+        errors = self.parameters.update(l=new_limit)
+        if errors:
+            self.history.undo()  # the attempted change never took effect; discard the snapshot we just took
+            return OperationResult(False, " ".join(errors))
         return OperationResult(True, "Access depth limit updated to " + str(new_limit) + ".")
 
     def advance_clock(self, delta):
@@ -182,8 +208,7 @@ class Scenery:
 
     def correct_event(self, event_id: int, magnitude: float, depth_km: float,
                        epicenter_x: float, epicenter_y: float,
-                       reporting_station_id: str,
-                       occurred_at=None, review=None) -> OperationResult:
+                       reporting_station_id: str) -> OperationResult:
         """Manual correction: magnitude, depth and/or epicenter can change.
         The occurrence time and the event's identity never change - a
         correction is a new report about the same event, not a new event.
@@ -231,9 +256,7 @@ class Scenery:
         event.setDepth_km(depth_km)
         event.setEpicenter(epicenter)
         event.setPriority(new_priority)
-        if occurred_at is not None:
-            event.setOcurredAt(occurred_at)
-        event.setReview(event.getReview() + 1 if review is None else review)
+        event.setReview(event.getReview() + 1)
         event.setStatus(AttetionStatus.PENDING)
         if reporting_station_id not in event.getStations():
             event.getStations().append(reporting_station_id)
