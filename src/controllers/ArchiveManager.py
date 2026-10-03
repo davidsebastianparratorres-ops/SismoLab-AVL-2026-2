@@ -4,7 +4,7 @@ from src.models.AttetionStatus import AttetionStatus
 
 class ArchiveManager:
 
-    def __init__(self, historic):
+    def __init__(self, historic=None):
         self.__historic = historic
 
     def reactivate(self, event_id: int, magnitude, depth, epicenter, ocurred_at, review, origin_station_id, zones):
@@ -37,12 +37,19 @@ class ArchiveManager:
         preorder, depth = self.__traverse_with_depth(root)
         eligible, size = self.__compute_eligibility(preorder, active_events, clock, t_hours)
 
-        candidates = [node for node in preorder if eligible[id(node)]]
+        candidates = self.eligible_branches(root, active_events, clock, t_hours)
         if not candidates:
             return None, []
 
-        winner = max(candidates, key=lambda n: (size[id(n)], depth[id(n)], n.getEventId()))
+        winner = max(candidates, key=lambda c: (c[1], c[2], c[0].getEventId()))[0]
         return winner, self.__collect_ids(winner)
+
+    def eligible_branches(self, root, active_events: dict, clock, t_hours: float):
+        if root is None:
+            return []
+        preorder, depth = self.__traverse_with_depth(root)
+        eligible, size = self.__compute_eligibility(preorder, active_events, clock, t_hours)
+        return [(n, size[id(n)], depth[id(n)]) for n in preorder if eligible[id(n)]]
 
     def __traverse_with_depth(self, root):
         preorder, depth = [], {}
