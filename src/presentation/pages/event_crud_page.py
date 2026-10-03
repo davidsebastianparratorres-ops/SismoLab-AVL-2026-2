@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 import streamlit as st
 
-from src.controllers.AssociationManager import AssociationManager
 from src.controllers.EventQueries import EventQueries
 from src.presentation.views.event_detail_view import render_event_detail
 
