@@ -25,11 +25,11 @@ class HistoryManager:
     @contextmanager
     def single_action(self):
         self.record()
-        self.__grouping = True
+        outer, self.__grouping = self.__grouping, True
         try:
             yield
         finally:
-            self.__grouping = False
+            self.__grouping = outer
 
     def undo(self) -> bool:
         if not self.__undo_stack:

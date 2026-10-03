@@ -101,8 +101,8 @@ class ScenarioPackage:
             return PackageResult(False, errors)
 
         stress = (mode == "ESTRES")
-        events, e = self._events_from(data["eventos_activos"], zones); errors += e
-        archived, e = self._events_from(data["historico"]["archivados"], zones); errors += e
+        events, e = self._events_from(data["eventos_activos"], zones, stations); errors += e
+        archived, e = self._events_from(data["historico"]["archivados"], zones, stations); errors += e
         eliminated = {int(i) for i in data["historico"]["eliminados"]}
 
         # Identities must not be duplicated across active / archived / eliminated.
@@ -197,14 +197,20 @@ class ScenarioPackage:
                 "priority": event.getPriority(), "review": event.getReview()}
 
     @staticmethod
-    def _events_from(raw_events, zones):
+    def _events_from(raw_events, zones, known_stations):
         events, errors = {}, []
         for id_str, raw in raw_events.items():
             event_id = int(id_str)
             epi = raw["epicenter"]
             problems = validate_ranges(event_id, raw["magnitude"], raw["depth"], epi["x"], epi["y"])
-            if raw["review"] < 1:
+            if type(raw["review"]) is not int or raw["review"] < 1:
                 problems.append("La revisión debe ser un entero positivo.")
+            emitters = raw["stations"]
+            if not emitters:
+                problems.append("El evento debe tener al menos una estación con reporte aceptado.")
+            elif len(set(emitters)) != len(emitters):
+                problems.append("Hay estaciones repetidas.")
+            problems += [f"Estación desconocida: {sid}." for sid in emitters if sid not in known_stations]
             if raw["status"] not in ("PENDING", "REVIEWED"):
                 problems.append("Estado de atención inválido.")
             try:

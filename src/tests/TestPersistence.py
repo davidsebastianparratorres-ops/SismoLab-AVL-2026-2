@@ -13,6 +13,7 @@ from src.models.SimulationClock import SimulationClock
 from src.models.SimulationParameters import SimulationParameters
 from src.controllers.Scenery import Scenery
 from src.controllers.ScenarioPackage import ScenarioPackage
+from src.controllers.TreeAuditor import TreeAuditor
 
 
 def utc(hour, minute):
@@ -141,6 +142,32 @@ class TestPersistence(unittest.TestCase):
     def test_rejects_event_after_simulation_clock(self):
         self._assert_rejected(lambda d: d["eventos_activos"]["1"].update(ocurredAt="2026-09-08T10:00:00Z"),
                               "reloj")
+
+    def test_rejects_invalid_review_numbers(self):
+        for bad in (0, -2, 1.5, True, "2"):
+            with self.subTest(review=bad):
+                self._assert_rejected(lambda d: d["eventos_activos"]["1"].update(review=bad), "revisión")
+
+    def test_rejects_unknown_empty_or_repeated_stations(self):
+        self._assert_rejected(lambda d: d["eventos_activos"]["1"].update(stations=["EST-99"]), "Estación desconocida")
+        self._assert_rejected(lambda d: d["eventos_activos"]["1"].update(stations=[]), "al menos una estación")
+        self._assert_rejected(lambda d: d["eventos_activos"]["1"].update(stations=["EST-01", "EST-01"]), "repetidas")
+
+    def test_rejects_the_same_errors_in_archived_events(self):
+        def archive_with_bad_station(d):
+            bad = copy.deepcopy(d["eventos_activos"]["1"])
+            bad["stations"] = ["EST-99"]
+            d["historico"]["archivados"]["900"] = bad
+        self._assert_rejected(archive_with_bad_station, "Estación desconocida")
+
+    def test_auditor_detects_a_cycle_instead_of_looping_forever(self):
+        scenery, _ = self._base_export()
+        node = scenery.tree.getRoot()
+        while node.getLeft() or node.getRight():
+            node = node.getLeft() or node.getRight()
+        node.setRight(scenery.tree.getRoot())              # a link back to the root
+        report = TreeAuditor().audit(scenery.tree.getRoot(), scenery.active_events, stress_mode=True)
+        self.assertIn("UNIQUENESS", [issue.category for issue in report.errors()])
 
     def test_rejects_id_that_is_active_and_eliminated(self):
         self._assert_rejected(lambda d: d["historico"]["eliminados"].append(1), "eliminado")

@@ -102,11 +102,9 @@ class Scenery:
         return OperationResult(True, "Event " + str(event_id) + " created with priority " + str(priority) + ".", event)
 
     def set_access_depth_limit(self, new_limit):
-        self.history.record()
-        errors = self.parameters.update(l=new_limit)
-        if errors:
-            self.history.undo()  # the attempted change never took effect; discard the snapshot we just took
-            return OperationResult(False, " ".join(errors))
+        result = self.update_parameters(l=new_limit)
+        if not result.success:
+            return result
         return OperationResult(True, "Access depth limit updated to " + str(new_limit) + ".")
 
     def advance_clock(self, delta):
