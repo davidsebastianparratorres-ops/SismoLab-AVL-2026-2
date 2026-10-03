@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .env
 proyecto.txt
+test_structure.py
