@@ -14,8 +14,8 @@ def render_event_crud_page():
     # way to confirm the Scenery wiring (session_state -> Scenery ->
     # EventQueries/AssociationManager) works before adding anything that
     # mutates state. Correction and deletion tabs come next.
-    tab_query, tab_create, tab_correct, tab_delete = st.tabs(
-        ["Consultar", "Crear", "Corregir", "Eliminar"]
+    tab_query, tab_create, tab_correct, tab_review, tab_delete = st.tabs(
+        ["Consultar", "Crear", "Corregir", "Marcar revisado", "Eliminar"]
     )
 
     with tab_query:
@@ -26,6 +26,9 @@ def render_event_crud_page():
 
     with tab_correct:
         _render_correct_tab()
+
+    with tab_review:
+        _render_review_tab()
 
     with tab_delete:
         _render_delete_tab()
@@ -180,6 +183,27 @@ def _render_correct_tab():
     # Scenery.correct_event already calls self.association_manager
     # internally (its own docstring predates that change and still says
     # otherwise - worth a quick fix by whoever touches that file next).
+    render_event_detail(_event_detail(scenery, int(event_id)).events[0])
+
+
+def _render_review_tab():
+    scenery = st.session_state.scenery
+    event_id = st.number_input("ID del evento a marcar como revisado", min_value=1, step=1, key="review_event_id")
+
+    if not st.button("Marcar como revisado", key="review_event_button"):
+        return
+
+    result = scenery.mark_as_reviewed(int(event_id))
+
+    if not result.success:
+        st.error(result.message)
+        return
+
+    st.success(result.message)
+
+    # Unlike create/correct/delete, this doesn't touch magnitude, priority,
+    # key or the tree - just the status field - so showing the updated
+    # detail right away is cheap and still useful for immediate feedback.
     render_event_detail(_event_detail(scenery, int(event_id)).events[0])
 
 
