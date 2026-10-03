@@ -4,7 +4,7 @@ import streamlit as st
 
 from src.controllers.EventQueries import EventQueries
 from src.presentation.views.event_detail_view import render_event_detail
-
+from src.controllers.AssociationManager import AssociationManager
 
 def render_event_crud_page():
     st.markdown("### Gestión de eventos")
