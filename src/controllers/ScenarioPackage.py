@@ -14,6 +14,7 @@ from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
 from src.rules.EventValidator import validate_ranges
 from src.controllers.TreeAuditor import TreeAuditor
 from src.controllers.AssociationManager import AssociationManager
+from src.models.Report import Report, ReportQueue
 
 SCHEMA_VERSION = 1
 MODES = ("NORMAL", "ESTRES")
@@ -55,9 +56,12 @@ class ScenarioPackage:
             "eventos_activos": {str(i): self._event_to_dict(e) for i, e in scenery.active_events.items()},
             "historico": {
                 "archivados": {str(i): self._event_to_dict(e) for i, e in scenery.archived_events.items()},
+                            "cola": [report.to_dict() for report in scenery.queue.to_list()],
                 "eliminados": sorted(scenery.eliminated_ids),
             },
             "asociaciones": {str(r): ref for r, ref in scenery.association_manager.to_dict().items()},
+            "cola": [report.to_dict() for report in scenery.queue.to_list()],
+            "extras": extras or {},
             "extras": extras or {},  # queue, versions, ... (owned by teammates)
         }
 
@@ -104,7 +108,7 @@ class ScenarioPackage:
         events, e = self._events_from(data["eventos_activos"], zones, stations); errors += e
         archived, e = self._events_from(data["historico"]["archivados"], zones, stations); errors += e
         eliminated = {int(i) for i in data["historico"]["eliminados"]}
-
+        queue, e = self._queue_from(data.get("cola", [])); errors += e
         # Identities must not be duplicated across active / archived / eliminated.
         for a, b, label in ((events, archived, "activo y archivado"),
                             (events, eliminated, "activo y eliminado"),
@@ -140,7 +144,7 @@ class ScenarioPackage:
             "zones": zones, "stations": stations, "clock": clock, "parameters": params,
             "metrics": metrics, "stress_mode": stress, "root": root,
             "active_events": events, "archived_events": archived, "eliminated_ids": eliminated,
-            "associations": manager.associations, "extras": data.get("extras", {}),
+                        "associations": manager.associations, "queue": queue, "extras": data.get("extras", {}),
             "imbalanced": report.imbalanced_count,  # UI must flag this when stress is on
         })
 
@@ -159,6 +163,7 @@ class ScenarioPackage:
         scenery.archived_events = state["archived_events"]
         scenery.eliminated_ids = state["eliminated_ids"]
         scenery.association_manager.associations = state["associations"]
+        scenery.queue.restore(state["queue"])
         scenery.stress_mode = state["stress_mode"]  # attribute owned by the stress-mode owner
 
     # ------------------------------------------------------------------
@@ -232,6 +237,19 @@ class ScenarioPackage:
                 depth_km=raw["depth"], status=raw["status"], stations=list(raw["stations"]),
                 ocurredAt=occurred_at, priority=raw["priority"], review=raw["review"])
         return events, errors
+
+    @staticmethod
+    def _queue_from(raw_queue):
+        if not isinstance(raw_queue, list):
+            return None, ["La cola debe ser una lista de reportes."]
+        reports, errors = [], []
+        for position, raw in enumerate(raw_queue, start=1):
+            report, problems = Report.from_dict(raw)
+            errors += [f"Cola, reporte {position}: {p}" for p in problems]
+            if report is not None:
+                reports.append(report)
+        return ReportQueue(reports), errors
+
 
     @staticmethod
     def _tree_to_dict(root):
