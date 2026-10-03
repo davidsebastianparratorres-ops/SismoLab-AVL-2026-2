@@ -15,6 +15,7 @@ from src.models.SimulationClock import SimulationClock
 from src.models.Metrics import Metrics
 from src.models.Zone import Zone
 from src.models.Station import Station
+from src.models.Report import ReportQueue
 from src.rules.ZoneValidator import validate_zone
 
 
@@ -33,8 +34,19 @@ class Scenery:
         self.metrics = Metrics()
         # Memento-style undo/redo: record() takes a full snapshot before a
         # change, instead of each action writing its own inverse by hand.
+        self.tree.metrics = self.metrics
+        self.queue = ReportQueue()
         self.history = HistoryManager(lambda: take_snapshot(self), lambda s: restore_snapshot(self, s))
+    
+    
+    @property
+    def stress_mode(self):
+        return not self.tree.balancing
 
+    @stress_mode.setter
+    def stress_mode(self, value):
+        self.tree.balancing = not value
+        
     @property
     def access_depth_limit(self):
         return self.parameters.l
