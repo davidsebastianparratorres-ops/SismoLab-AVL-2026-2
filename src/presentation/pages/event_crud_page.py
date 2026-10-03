@@ -1,6 +1,5 @@
 import streamlit as st
 
-from src.controllers.AssociationManager import AssociationManager
 from src.controllers.EventQueries import EventQueries
 from src.presentation.views.event_detail_view import render_event_detail
 
@@ -28,7 +27,15 @@ def _render_query_tab():
     if not st.button("Consultar", key="query_event_button"):
         return
 
-    manager = AssociationManager(scenery)
+    # BUG FIX: this used to build a throwaway `AssociationManager(scenery)`
+    # here, which always starts with an empty `self.associations` dict and
+    # never has `recalculate_all()` called on it. Candidates still came out
+    # right (they are computed live), but the chosen reference and
+    # "referenced by" always came out empty/None, even when a real stored
+    # association existed. Reusing scenery.association_manager — the one
+    # Scenery itself keeps up to date on every create/correct/delete — is
+    # the fix: it is the single source of truth for associations.
+    manager = scenery.association_manager
 
     # Same adapter pattern used throughout the project (see
     # tests/test_04_query_event.py): get_candidates/get_reference take an
