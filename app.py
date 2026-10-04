@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import streamlit as st
 from src.presentation.pages.queries_page import render_queries_page
+from src.presentation.pages.scenario_package_page import render_scenario_package_page
 
 from src.presentation.pages.page_config import apply_page_config
 from src.presentation.pages.session_state import init_session_state
@@ -30,6 +31,7 @@ def main():
         render_scenario_config_page()
         render_event_crud_page()
         render_queries_page()
+        render_scenario_package_page()
 
     with right:
         render_undo_redo_controls(scenery.history)
