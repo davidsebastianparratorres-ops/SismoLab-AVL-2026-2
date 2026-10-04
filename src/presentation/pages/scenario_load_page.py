@@ -55,4 +55,12 @@ def _apply_result(result):
     scenery.active_events = result.events
     scenery.archived_events = {}
     scenery.eliminated_ids = set()
+
+    # Events loaded from a file already carry real station ids - register
+    # any that aren't known yet, so the "Estaciones" page reflects what
+    # was actually loaded instead of staying empty until someone re-types
+    # the same ids by hand.
+    station_ids = {sid for event in result.events.values() for sid in event.getStations()}
+    scenery.register_known_stations(station_ids)
+
     st.success("Escenario cargado correctamente.")
