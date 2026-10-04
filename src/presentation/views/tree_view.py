@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from src.presentation.styles.theme import (
     TREE_NORMAL_NODE_COLOR,
     TREE_HIGHLIGHT_NODE_COLOR,
+    TREE_UNBALANCED_NODE_COLOR,
     TREE_EDGE_COLOR,
     TREE_FONT_COLOR,
     TREE_NODE_SIZE,
@@ -19,7 +20,7 @@ def _build_graph(node, G=None, pos=None, x=0.0, y=0.0, layer=1):
         return G, pos
 
     label = str(node.getEventId())
-    G.add_node(label)
+    G.add_node(label, unbalanced=abs(node.getBalanceFactor()) > 1)
     pos[label] = (x, y)
     offset = 4 / (layer * 0.7)
 
@@ -41,7 +42,9 @@ def render_tree(root, highlight_id=None):
 
     G, pos = _build_graph(root)
     node_colors = [
-        TREE_HIGHLIGHT_NODE_COLOR if n == str(highlight_id) else TREE_NORMAL_NODE_COLOR
+        TREE_HIGHLIGHT_NODE_COLOR if n == str(highlight_id)
+        else TREE_UNBALANCED_NODE_COLOR if G.nodes[n]["unbalanced"]
+        else TREE_NORMAL_NODE_COLOR
         for n in G.nodes()
     ]
 
@@ -57,6 +60,9 @@ def render_tree(root, highlight_id=None):
     )
     st.pyplot(fig)
     plt.close(fig)
+    unbalanced = sum(1 for _, flag in G.nodes(data="unbalanced") if flag)
+    if unbalanced:
+        st.caption(f"Naranja: {unbalanced} nodo(s) con |factor de balance| > 1 (el árbol no cumple AVL).")
 
 
 # NOTE: render_tree_queries (Section 11 query panel) used to live here,

@@ -8,6 +8,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import streamlit as st
 from src.presentation.pages.queries_page import render_queries_page
 
+from src.presentation.pages.structure_page import render_structure_page
+from src.presentation.views.structure_view import render_mode_banner
 from src.presentation.pages.page_config import apply_page_config
 from src.presentation.pages.session_state import init_session_state
 from src.presentation.pages.scenario_load_page import render_scenario_load_page
@@ -24,6 +26,7 @@ def main():
 
     st.markdown("<h1 style='text-align:center;'>SismoLab AVL</h1>", unsafe_allow_html=True)
     scenery = st.session_state.scenery
+    banner = st.container()
     left, right = st.columns([1, 2])
 
     with left:
@@ -31,18 +34,23 @@ def main():
         render_scenario_config_page()
         render_event_crud_page()
         render_queries_page()
+        
 
     with right:
-        tab_tree, tab_historic, tab_queue = st.tabs(["Árbol", "Histórico", "Cola"])
         render_undo_redo_controls(scenery.history)
-        tab_tree, tab_historic = st.tabs(["Árbol", "Histórico"])
+        tab_tree, tab_historic, tab_queue, tab_structure = st.tabs(
+        ["Árbol", "Histórico", "Cola", "Archivo y versiones"])
         with tab_tree:
             render_tree(scenery.tree.getRoot())
         with tab_historic:
             render_historic(scenery)
         with tab_queue:
             render_queue_page()
-            
+        with tab_structure:
+            render_structure_page()
+                
+    with banner:
+        render_mode_banner(scenery)
     advance_continuous_queue()
             
 

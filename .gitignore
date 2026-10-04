@@ -14,3 +14,6 @@ TestVersions.py
 parte1_models.txt
 generar.ps1
 parte2_controllers.txt
+parte3_data.txt
+parte5_dto_rules_tests.txt
+generar_todo.ps1

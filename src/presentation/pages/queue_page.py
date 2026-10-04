@@ -6,6 +6,7 @@ import streamlit as st
 
 from src.controllers.ReportProcessor import ReportProcessor
 from src.models.Report import Report, ReportQueue
+from src.presentation.pages.flash import show_flash, flash_and_rerun
 from src.presentation.views.error_view import render_errors
 from src.presentation.views.queue_view import render_queue, render_step_result
 
@@ -16,7 +17,7 @@ def render_queue_page():
     buttons and this page always show the same, already updated, state."""
     scenery = st.session_state.scenery
     st.markdown("### Cola de reportes")
-    _show_notice()
+    show_flash("queue")
 
     if scenery.stress_mode:
         st.caption("Modo estrés activo: los pasos conservan el orden del árbol pero aplazan las rotaciones.")
@@ -45,17 +46,6 @@ def advance_continuous_queue():
     st.session_state.queue_last_step = ReportProcessor(scenery).process_next()
     time.sleep(st.session_state.get("queue_delay", 1.0))
     st.session_state.queue_auto = True
-    st.rerun()
-
-
-def _show_notice():
-    notice = st.session_state.pop("queue_notice", None)
-    if notice:
-        getattr(st, notice[0])(notice[1])
-
-
-def _notify_and_rerun(level: str, message: str):
-    st.session_state.queue_notice = (level, message)
     st.rerun()
 
 
@@ -96,7 +86,7 @@ def _render_prepare_tab():
     reports = [Report(int(event_id), magnitude, depth_km, epicenter_x, epicenter_y, occurred_at,
                       int(revision), station) for station in stations]
     ReportProcessor(scenery).enqueue(reports)
-    _notify_and_rerun("success", f"{len(reports)} reporte(s) agregados a la cola (una sola acción deshacible).")
+    flash_and_rerun("queue", "success", f"{len(reports)} reporte(s) agregados a la cola (una sola acción deshacible).")
 
 
 def _render_file_tab():
@@ -118,7 +108,7 @@ def _render_file_tab():
         render_errors(errors, "La ráfaga no es válida; no se encoló nada:")
         return
     ReportProcessor(st.session_state.scenery).enqueue(queue.to_list())
-    _notify_and_rerun("success", f"{len(queue)} reporte(s) agregados a la cola (una sola acción deshacible).")
+    flash_and_rerun("queue", "success", f"{len(queue)} reporte(s) agregados a la cola (una sola acción deshacible).")
 
 
 def _render_controls():
