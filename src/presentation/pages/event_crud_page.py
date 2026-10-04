@@ -79,8 +79,7 @@ def _render_create_tab():
         # creation will be rejected by create_event's own "Unknown
         # station" check until the team defines where stations come from.
         st.warning(
-            "No hay estaciones configuradas todavía (pendiente de definir "
-            "con el equipo). Cualquier creación será rechazada hasta que "
+            "No hay estaciones configuradas. Cualquier creación será rechazada hasta que "
             "existan estaciones reales en el escenario."
         )
 
@@ -137,8 +136,7 @@ def _render_correct_tab():
 
     if not scenery.stations:
         st.warning(
-            "No hay estaciones configuradas todavía (pendiente de definir "
-            "con el equipo). Cualquier corrección será rechazada hasta que "
+            "No hay estaciones configuradas. Cualquier corrección será rechazada hasta que "
             "existan estaciones reales en el escenario."
         )
 
