@@ -38,8 +38,8 @@ class Scenery:
         self.tree.metrics = self.metrics
         self.queue = ReportQueue()
         self.history = HistoryManager(lambda: take_snapshot(self), lambda s: restore_snapshot(self, s))
-
-
+    
+    
     @property
     def stress_mode(self):
         return not self.tree.balancing
@@ -47,6 +47,7 @@ class Scenery:
     @stress_mode.setter
     def stress_mode(self, value):
         self.tree.balancing = not value
+        
 
     @property
     def access_depth_limit(self):
@@ -104,7 +105,32 @@ class Scenery:
         self.history.record()
         self.stations = {**self.stations, station_id: Station(station_id, name)}
         return OperationResult(True, "Estación agregada.")
+    
+    
+    def register_known_stations(self, station_ids) -> None:
+        """A bulk load (TopologyIO/InsertionIO) already carries real
+        station ids on every event, so requiring the user to separately
+        re-type each one on the stations page would just duplicate what
+        the file already says. This auto-registers any id not already
+        known, using the id itself as a placeholder name (the JSON schema
+        doesn't carry a station name) - it never overwrites a station
+        that already has a real name from add_station.
 
+        Deliberately no self.history.record() here: this is meant to run
+        as part of the same load that already records one undo step
+        (see scenario_load_page._apply_result), not as its own step -
+        undoing a load should undo the whole thing at once.
+
+        Same reference-vs-copy care as add_station: replaces self.stations
+        with a new dict instead of mutating the existing one in place, so
+        a snapshot taken before this call stays untouched.
+        """
+        new_stations = dict(self.stations)
+        for station_id in station_ids:
+            if station_id not in new_stations:
+                new_stations[station_id] = Station(station_id, station_id)
+        self.stations = new_stations
+        
     def create_event(
         self,
         event_id: int,
