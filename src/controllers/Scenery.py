@@ -10,6 +10,7 @@ from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
 from src.controllers.HistoryManager import HistoryManager
 from src.controllers.ScenarioSnapshot import take_snapshot, restore_snapshot
 from src.controllers.AssociationManager import AssociationManager
+from src.controllers.TreeAuditor import TreeAuditor
 from src.models.SimulationParameters import SimulationParameters
 from src.models.SimulationClock import SimulationClock
 from src.models.Metrics import Metrics
@@ -37,8 +38,8 @@ class Scenery:
         self.tree.metrics = self.metrics
         self.queue = ReportQueue()
         self.history = HistoryManager(lambda: take_snapshot(self), lambda s: restore_snapshot(self, s))
-    
-    
+
+
     @property
     def stress_mode(self):
         return not self.tree.balancing
@@ -46,10 +47,32 @@ class Scenery:
     @stress_mode.setter
     def stress_mode(self, value):
         self.tree.balancing = not value
-        
+
     @property
     def access_depth_limit(self):
         return self.parameters.l
+
+    def verify_structure(self, stress_mode: bool = None):
+        """"Verificar estructura" (section 14): checks global order,
+        uniqueness, references, and recomputed heights/balance factors over
+        the active tree. Read-only, never modifies anything - the version
+        that actually fixes imbalance is StressManager.recover(), which
+        calls this same TreeAuditor internally before and after rotating.
+
+        stress_mode defaults to the scenario's own mode (so a UI button can
+        just call scenery.verify_structure() without having to know that
+        stress mode lives on the tree as `balancing`), but can be overridden
+        for direct testing against a hypothetical mode.
+        """
+        if stress_mode is None:
+            stress_mode = self.stress_mode
+        return TreeAuditor().audit(
+            self.tree.getRoot(),
+            self.active_events,
+            stress_mode=stress_mode,
+            archived_ids=set(self.archived_events),
+            eliminated_ids=self.eliminated_ids,
+        )
 
     def add_zone(self, x_min: float, x_max: float, y_min: float, y_max: float,
                  populated: bool) -> OperationResult:
@@ -68,19 +91,19 @@ class Scenery:
 
         self.history.record()
         self.zones = [*self.zones, Zone(x_min, x_max, y_min, y_max, populated)]
-        return OperationResult(True, "Zone added.")
+        return OperationResult(True, "Zona agregada.")
 
     def add_station(self, station_id: str, name: str) -> OperationResult:
         """Stations are immutable once created too: no edit, no delete.
         Same reasoning as add_zone for replacing (not mutating) self.stations."""
         if not station_id:
-            return OperationResult(False, "Station id cannot be empty.")
+            return OperationResult(False, "El identificador de la estación no puede estar vacío.")
         if station_id in self.stations:
-            return OperationResult(False, "Station " + station_id + " already exists.")
+            return OperationResult(False, "La estación " + station_id + " ya existe.")
 
         self.history.record()
         self.stations = {**self.stations, station_id: Station(station_id, name)}
-        return OperationResult(True, "Station added.")
+        return OperationResult(True, "Estación agregada.")
 
     def create_event(
         self,
@@ -96,7 +119,7 @@ class Scenery:
         if (event_id in self.active_events
             or event_id in self.archived_events
             or event_id in self.eliminated_ids):
-            return OperationResult(False, "Identifier" + str(event_id) + " is already in use.")
+            return OperationResult(False, "El identificador " + str(event_id) + " ya está en uso.")
 
         errors = validate_event_input(
             event_id, magnitude, depth_km, epicenter_x, epicenter_y,
@@ -131,11 +154,7 @@ class Scenery:
         self.active_events[event_id] = event
         self.association_manager.recalculate_all()
 
-        # Associations, metrics and visualization updates are wired in
-        # once GestorAsociaciones and the metrics module exist left as
-        # the next piece to build.
-
-        return OperationResult(True, "Event " + str(event_id) + " created with priority " + str(priority) + ".", event)
+        return OperationResult(True, "Evento " + str(event_id) + " creado con prioridad " + str(priority) + ".", event)
 
     def set_access_depth_limit(self, new_limit):
         self.history.record()
@@ -143,7 +162,7 @@ class Scenery:
         if errors:
             self.history.undo()  # the attempted change never took effect; discard the snapshot we just took
             return OperationResult(False, " ".join(errors))
-        return OperationResult(True, "Access depth limit updated to " + str(new_limit) + ".")
+        return OperationResult(True, "Límite de profundidad de acceso actualizado a " + str(new_limit) + ".")
 
     def advance_clock(self, delta):
         errors = SimulationClock.validate_advance(delta)
@@ -166,7 +185,6 @@ class Scenery:
             self.association_manager.recalculate_all()
         return OperationResult(True, "Parámetros actualizados.")
 
-
     def get_event(self, event_id):
         if event_id in self.active_events:
             return EventLookupResult(EventStatus.ACTIVE, self.active_events[event_id])
@@ -179,7 +197,7 @@ class Scenery:
 
     def mark_as_reviewed(self, event_id):
         if event_id not in self.active_events:
-            return OperationResult(False, "Event " + str(event_id) + " is not an active event.")
+            return OperationResult(False, "El evento " + str(event_id) + " no es un evento activo.")
 
         self.history.record()
         event = self.active_events[event_id]
@@ -189,7 +207,7 @@ class Scenery:
         # PENDING forever. Also, the function fell off the end without a
         # return, so callers got None instead of an OperationResult.
         event.setStatus(AttetionStatus.REVIEWED)
-        return OperationResult(True, "Event " + str(event_id) + " marked as reviewed.", event)
+        return OperationResult(True, "Evento " + str(event_id) + " marcado como revisado.", event)
 
     def delete_event(self, event_id: int) -> OperationResult:
         """Marks an event as retired: out of the active catalog, out of the
@@ -205,7 +223,7 @@ class Scenery:
         only recomputes the deleted event's own - now gone - association).
         """
         if event_id not in self.active_events:
-            return OperationResult(False, "Event " + str(event_id) + " is not an active event.")
+            return OperationResult(False, "El evento " + str(event_id) + " no es un evento activo.")
 
         event = self.active_events[event_id]
         key = Key(event.getPriority(), event.getMagnitude(), event.getEventId())
@@ -216,7 +234,7 @@ class Scenery:
         self.eliminated_ids.add(event_id)
         self.association_manager.recalculate_all()
 
-        return OperationResult(True, "Event " + str(event_id) + " eliminated.", event)
+        return OperationResult(True, "Evento " + str(event_id) + " eliminado.", event)
 
     def correct_event(self, event_id: int, magnitude: float, depth_km: float,
                        epicenter_x: float, epicenter_y: float,
@@ -238,17 +256,15 @@ class Scenery:
         The event always returns to PENDING: whoever already reviewed the
         previous data has not reviewed this new report yet.
 
-        Note for whoever wires this in: like delete_event, this does not
-        call AssociationManager - run recalculate_all() right after a
-        successful correction, since a changed magnitude/epicenter can
-        make this event a candidate (or stop being one) for others, not
-        just change its own chosen reference.
+        association_manager.recalculate_all() runs at the end since a
+        changed magnitude/epicenter can make this event a candidate (or
+        stop being one) for others, not just change its own reference.
         """
         if event_id not in self.active_events:
-            return OperationResult(False, "Event " + str(event_id) + " is not an active event.")
+            return OperationResult(False, "El evento " + str(event_id) + " no es un evento activo.")
 
         if reporting_station_id not in self.stations:
-            return OperationResult(False, "Unknown station: " + str(reporting_station_id) + ".")
+            return OperationResult(False, "Estación desconocida: " + str(reporting_station_id) + ".")
 
         errors = validate_ranges(event_id, magnitude, depth_km, epicenter_x, epicenter_y)
         if errors:
@@ -278,7 +294,7 @@ class Scenery:
         self.association_manager.recalculate_all()
         self.metrics.increment("corrections_accepted")
 
-        return OperationResult(True, "Event " + str(event_id) + " corrected with priority "
+        return OperationResult(True, "Evento " + str(event_id) + " corregido con prioridad "
                                 + str(new_priority) + ".", event)
 
     def undo(self) -> OperationResult:
