@@ -157,11 +157,9 @@ class Scenery:
         return OperationResult(True, "Evento " + str(event_id) + " creado con prioridad " + str(priority) + ".", event)
 
     def set_access_depth_limit(self, new_limit):
-        self.history.record()
-        errors = self.parameters.update(l=new_limit)
-        if errors:
-            self.history.undo()  # the attempted change never took effect; discard the snapshot we just took
-            return OperationResult(False, " ".join(errors))
+        result = self.update_parameters(l=new_limit)
+        if not result.success:
+            return result
         return OperationResult(True, "Límite de profundidad de acceso actualizado a " + str(new_limit) + ".")
 
     def advance_clock(self, delta):
@@ -238,7 +236,8 @@ class Scenery:
 
     def correct_event(self, event_id: int, magnitude: float, depth_km: float,
                        epicenter_x: float, epicenter_y: float,
-                       reporting_station_id: str) -> OperationResult:
+                       reporting_station_id: str,
+                       occurred_at=None, review=None) -> OperationResult:
         """Manual correction: magnitude, depth and/or epicenter can change.
         The occurrence time and the event's identity never change - a
         correction is a new report about the same event, not a new event.
@@ -284,7 +283,9 @@ class Scenery:
         event.setDepth_km(depth_km)
         event.setEpicenter(epicenter)
         event.setPriority(new_priority)
-        event.setReview(event.getReview() + 1)
+        if occurred_at is not None:
+            event.setOcurredAt(occurred_at)
+        event.setReview(event.getReview() + 1 if review is None else review)
         event.setStatus(AttetionStatus.PENDING)
         if reporting_station_id not in event.getStations():
             event.getStations().append(reporting_station_id)

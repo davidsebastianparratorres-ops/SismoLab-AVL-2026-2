@@ -31,12 +31,6 @@ class ArchiveManager:
         the most nodes — ties broken by deepest root, then highest event
         id. Read-only: never touches the tree, so the caller can show the
         preview before deciding to execute."""
-        if root is None:
-            return None, []
-
-        preorder, depth = self.__traverse_with_depth(root)
-        eligible, size = self.__compute_eligibility(preorder, active_events, clock, t_hours)
-
         candidates = self.eligible_branches(root, active_events, clock, t_hours)
         if not candidates:
             return None, []

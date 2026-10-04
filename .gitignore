@@ -4,3 +4,13 @@ __pycache__/
 .env
 proyecto.txt
 test_structure.py
+parte4_presentation.txt
+TestPresentation.py
+TestArchive.py
+TestReports.py
+TestRotations.py
+TestUndo.py
+TestVersions.py
+parte1_models.txt
+generar.ps1
+parte2_controllers.txt

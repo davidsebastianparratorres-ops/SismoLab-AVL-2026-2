@@ -71,6 +71,20 @@ class ReportQueue:
     def to_list(self) -> list:
         return list(self.__items)
 
+    @staticmethod
+    def from_dicts(raw_reports, label="Reporte"):
+        """Returns (queue, errors) from a JSON list of reports. All-or-nothing: if any report is
+        malformed the caller gets every problem and must not enqueue anything."""
+        if not isinstance(raw_reports, list):
+            return None, ["Debe ser una lista de reportes."]
+        reports, errors = [], []
+        for position, raw in enumerate(raw_reports, start=1):
+            report, problems = Report.from_dict(raw)
+            errors += [f"{label} {position}: {p}" for p in problems]
+            if report is not None:
+                reports.append(report)
+        return ReportQueue(reports), errors
+
     def __len__(self) -> int:
         return len(self.__items)
 

@@ -56,12 +56,10 @@ class ScenarioPackage:
             "eventos_activos": {str(i): self._event_to_dict(e) for i, e in scenery.active_events.items()},
             "historico": {
                 "archivados": {str(i): self._event_to_dict(e) for i, e in scenery.archived_events.items()},
-                            "cola": [report.to_dict() for report in scenery.queue.to_list()],
                 "eliminados": sorted(scenery.eliminated_ids),
             },
             "asociaciones": {str(r): ref for r, ref in scenery.association_manager.to_dict().items()},
             "cola": [report.to_dict() for report in scenery.queue.to_list()],
-            "extras": extras or {},
             "extras": extras or {},  # queue, versions, ... (owned by teammates)
         }
 
@@ -240,15 +238,8 @@ class ScenarioPackage:
 
     @staticmethod
     def _queue_from(raw_queue):
-        if not isinstance(raw_queue, list):
-            return None, ["La cola debe ser una lista de reportes."]
-        reports, errors = [], []
-        for position, raw in enumerate(raw_queue, start=1):
-            report, problems = Report.from_dict(raw)
-            errors += [f"Cola, reporte {position}: {p}" for p in problems]
-            if report is not None:
-                reports.append(report)
-        return ReportQueue(reports), errors
+        queue, errors = ReportQueue.from_dicts(raw_queue, label="Cola, reporte")
+        return queue, (["La cola debe ser una lista de reportes."] if queue is None else errors)
 
 
     @staticmethod

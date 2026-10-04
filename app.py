@@ -15,6 +15,7 @@ from src.presentation.pages.scenario_config_page import render_scenario_config_p
 from src.presentation.pages.event_crud_page import render_event_crud_page
 from src.presentation.views.tree_view import render_tree
 from src.presentation.views.history_view import render_historic, render_undo_redo_controls
+from src.presentation.pages.queue_page import render_queue_page, advance_continuous_queue
 
 
 def main():
@@ -32,12 +33,18 @@ def main():
         render_queries_page()
 
     with right:
+        tab_tree, tab_historic, tab_queue = st.tabs(["Árbol", "Histórico", "Cola"])
         render_undo_redo_controls(scenery.history)
         tab_tree, tab_historic = st.tabs(["Árbol", "Histórico"])
         with tab_tree:
             render_tree(scenery.tree.getRoot())
         with tab_historic:
             render_historic(scenery)
+        with tab_queue:
+            render_queue_page()
+            
+    advance_continuous_queue()
+            
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import tempfile
 import os
 import streamlit as st
 
-from src.controllers.Topologyio import TopologyIO
+from src.controllers.ScenarioPackage import ScenarioPackage
 from src.controllers.InsertionIO import InsertionIO
 from src.presentation.views.error_view import render_errors
 
@@ -29,9 +29,22 @@ def render_scenario_load_page():
 
 
 def _load_topology(filepath: str):
-    zones = st.session_state.scenery.zones
-    result = TopologyIO().load(filepath, zones)
-    _apply_result(result)
+    package = ScenarioPackage()
+    result = package.load(filepath)
+    if not result.success:
+        render_errors(result.errors)
+        return
+
+    package.apply(st.session_state.scenery, result.state)
+
+    imbalanced = result.state["imbalanced"]
+    if result.state["stress_mode"]:
+        st.warning(
+            f"Escenario cargado en modo estrés: {imbalanced} nodo(s) con |factor de balance| > 1."
+            if imbalanced else "Escenario cargado en modo estrés (el árbol está balanceado)."
+        )
+    else:
+        st.success("Escenario cargado correctamente.")
 
 
 def _load_insertion(filepath: str):
