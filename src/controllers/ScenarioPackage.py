@@ -14,7 +14,7 @@ from src.rules.EventRules import belongs_to_populated_zone, calculate_priority
 from src.rules.EventValidator import validate_ranges
 from src.controllers.TreeAuditor import TreeAuditor
 from src.controllers.AssociationManager import AssociationManager
-from src.models.Report import Report, ReportQueue
+from src.models.Report import ReportQueue
 
 SCHEMA_VERSION = 1
 MODES = ("NORMAL", "ESTRES")
