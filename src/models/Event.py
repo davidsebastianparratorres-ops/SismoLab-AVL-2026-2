@@ -1,6 +1,6 @@
 from src.models.AttetionStatus import AttetionStatus
 from src.models.Point import Point
-
+from datetime import datetime
 
 # Base class for the seismic events that can be registered in the system.
 # This class contains the common attributes of these events.
@@ -14,7 +14,7 @@ class Event:
         depth_km=0.0,
         status=AttetionStatus.PENDING,
         stations=None,
-        ocurredAt="",
+        ocurredAt=None,
         priority=0,
         review=1,
         associatedEvents=None):
@@ -24,8 +24,16 @@ class Event:
         self.__depth_km = depth_km
         self.__status = status
         self.__stations = stations if stations is not None else []
-        self.__ocurredAt = ocurredAt
-        self.__priority = priority
+        if isinstance(ocurredAt, str):
+            self.__ocurredAt = (
+                datetime.fromisoformat(ocurredAt.replace("Z", "+00:00"))
+                if ocurredAt
+                else None
+            )
+        else:
+            self.__ocurredAt = ocurredAt
+        
+        self.__priority = priority            
         self.__review = review
         # BUG FIX: this attribute was never initialized before, and the
         # constructor didn't even accept it as a parameter. Any call to

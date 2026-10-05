@@ -27,6 +27,15 @@ def render_archive_panel():
         flash_and_rerun("structure", "success" if result.success else "error", result.message)
 
 
+def render_structure_page():
+    """Provide the archive and named-version workflows in the structure tab."""
+    tab_archive, tab_versions = st.tabs(["Archivar rama antigua", "Versiones del escenario"])
+    with tab_archive:
+        render_archive_panel()
+    with tab_versions:
+        render_versions_panel()
+
+
 def render_versions_panel():
     """Named versions (section 13): save, list and restore."""
     scenery = st.session_state.scenery
