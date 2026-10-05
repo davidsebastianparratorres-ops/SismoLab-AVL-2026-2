@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import streamlit as st
 from src.presentation.pages.queries_page import render_queries_page
 from src.presentation.pages.scenario_package_page import render_scenario_package_page
-
+from src.presentation.views.spatial_view import render_spatial_map
 from src.presentation.pages.structure_page import render_structure_page
 from src.presentation.pages.comparison_page import render_comparison_page
 from src.presentation.views.structure_view import render_mode_banner
@@ -40,10 +40,12 @@ def main():
 
     with right:
         render_undo_redo_controls(scenery.history)
-        tab_tree, tab_historic, tab_queue, tab_compare, tab_structure = st.tabs(
-        ["Árbol", "Histórico", "Cola", "AVL vs BST", "Archivo y versiones"])
+        tab_tree, tab_spatial, tab_historic, tab_queue, tab_compare, tab_structure = st.tabs(
+        ["Árbol", "Plano X/Y", "Histórico", "Cola", "AVL vs BST", "Archivo y versiones"])
         with tab_tree:
             render_tree(scenery.tree.getRoot())
+        with tab_spatial:
+            render_spatial_map(scenery)
         with tab_historic:
             render_historic(scenery)
         with tab_queue:
