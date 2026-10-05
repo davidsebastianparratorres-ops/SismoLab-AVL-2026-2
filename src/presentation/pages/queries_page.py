@@ -13,8 +13,9 @@ def render_queries_page():
     not just the matching events themselves."""
     st.markdown("### Consultas")
 
-    tab_pending, tab_magnitude, tab_date = st.tabs(
-        ["Pendientes (orden descendente)", "Rango de magnitud", "Profundidad y fecha"]
+    tab_pending, tab_magnitude, tab_date, tab_costly = st.tabs(
+        ["Pendientes (orden descendente)", "Rango de magnitud",
+         "Profundidad y fecha", "Prioridad alta con acceso costoso"]
     )
 
     with tab_pending:
@@ -25,6 +26,9 @@ def render_queries_page():
 
     with tab_date:
         _render_date_tab()
+
+    with tab_costly:
+        _render_costly_access_tab()
 
 
 def _render_pending_tab():
@@ -97,4 +101,36 @@ def _render_date_tab():
         st.table([
             {"ID": e.getEventId(), "Profundidad (km)": e.getDepth_km(), "Fecha": e.getOcurredAt()}
             for e in result.events
+        ])
+
+
+def _render_costly_access_tab():
+    """Section 11, fourth bullet: high-priority (3) events whose node depth
+    is strictly greater than L. Indicators.build_indicators() already calls
+    this same query internally, but only keeps the COUNT for the summary
+    panel - this tab is the actual detailed listing the spec asks for, with
+    node depth, the L used, and the search cost (node depth + 1, section 9)
+    for every event found, not just a number."""
+    scenery = st.session_state.scenery
+
+    st.caption(f"Límite de profundidad de acceso actual (L): {scenery.access_depth_limit}")
+
+    if not st.button("Buscar prioridad alta con acceso costoso", key="query_costly_button"):
+        return
+
+    result = EventQueries().high_priority_costly_access(
+        scenery.tree.getRoot(), scenery.active_events, scenery.access_depth_limit
+    )
+    st.caption(f"{result.message} (nodos examinados: {result.nodes_examined})")
+
+    if result.events:
+        st.table([
+            {
+                "ID": entry.event.getEventId(),
+                "Prioridad": entry.event.getPriority(),
+                "Profundidad del nodo": entry.node_depth,
+                "Límite (L)": scenery.access_depth_limit,
+                "Nodos visitados en la búsqueda": entry.search_cost,
+            }
+            for entry in result.events
         ])
