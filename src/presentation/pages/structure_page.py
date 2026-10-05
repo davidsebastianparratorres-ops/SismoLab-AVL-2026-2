@@ -36,14 +36,16 @@ def render_structure_page():
         render_versions_panel()
 
 
-def render_versions_panel():
+def render_versions_panel(key_prefix=""):
     """Named versions (section 13): save, list and restore."""
     scenery = st.session_state.scenery
-    directory = st.text_input("Carpeta de versiones", value="versions", key="versions_dir")
+    directory = st.text_input(
+        "Carpeta de versiones", value="versions", key=f"{key_prefix}versions_dir"
+    )
     store = VersionStore(directory)
 
-    with st.form("save_version_form"):
-        name = st.text_input("Nombre de la versión", key="version_name")
+    with st.form(f"{key_prefix}save_version_form"):
+        name = st.text_input("Nombre de la versión", key=f"{key_prefix}version_name")
         saved = st.form_submit_button("Guardar versión actual")
     if saved:
         result = store.save(scenery, name)
@@ -53,7 +55,9 @@ def render_versions_panel():
     render_versions(versions)
     if not versions:
         return
-    selected = st.selectbox("Versión a restaurar", [v.name for v in versions], key="version_select")
-    if st.button("Restaurar versión seleccionada", key="restore_version_button"):
+    selected = st.selectbox(
+        "Versión a restaurar", [v.name for v in versions], key=f"{key_prefix}version_select"
+    )
+    if st.button("Restaurar versión seleccionada", key=f"{key_prefix}restore_version_button"):
         result = store.restore(scenery, selected)    # validated first; one undoable action
         flash_and_rerun("structure", "success" if result.success else "error", result.message)

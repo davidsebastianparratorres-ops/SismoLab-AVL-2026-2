@@ -14,7 +14,7 @@ def _archive_dialog():
 
 @st.dialog("Versiones del escenario", width="large")
 def _versions_dialog():
-    render_versions_panel()
+    render_versions_panel(key_prefix="dialog_")
 
 
 def render_action_bar():

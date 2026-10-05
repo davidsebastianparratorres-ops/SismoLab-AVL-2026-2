@@ -35,11 +35,16 @@ def main():
     left, right = st.columns([1, 2])
 
     with left:
-        render_scenario_load_page()
-        render_scenario_config_page()
-        render_event_crud_page()
-        render_queries_page()
-        render_scenario_package_page()
+        with st.expander("Cargar escenario", expanded=False):
+            render_scenario_load_page()
+        with st.expander("Configuración del escenario", expanded=False):
+            render_scenario_config_page()
+        with st.expander("Gestión de eventos", expanded=False):
+            render_event_crud_page()
+        with st.expander("Consultas", expanded=False):
+            render_queries_page()
+        with st.expander("Guardado estructural completo", expanded=False):
+            render_scenario_package_page()
 
     with right:
         render_undo_redo_controls(scenery.history)
