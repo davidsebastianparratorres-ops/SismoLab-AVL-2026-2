@@ -8,7 +8,7 @@ from src.controllers.ReportProcessor import ReportProcessor
 from src.models.Report import Report, ReportQueue
 from src.presentation.pages.flash import show_flash, flash_and_rerun
 from src.presentation.views.error_view import render_errors
-from src.presentation.views.queue_view import render_queue, render_step_result
+from src.presentation.views.queue_view import render_queue, render_resolution_guide, render_step_result
 
 
 def render_queue_page():
@@ -16,11 +16,12 @@ def render_queue_page():
     Every action stores its result in session_state and reruns the app, so the tree, the undo
     buttons and this page always show the same, already updated, state."""
     scenery = st.session_state.scenery
-    st.markdown("### Cola de reportes")
+    st.markdown("### Cola FIFO de reportes")
+    st.caption("Recepción, orden de llegada y procesamiento controlado de reportes sísmicos.")
     show_flash("queue")
 
     if scenery.stress_mode:
-        st.caption("Modo estrés activo: los pasos conservan el orden del árbol pero aplazan las rotaciones.")
+        st.warning("Modo estrés activo: los reportes se procesan en orden, pero las rotaciones se aplazan.")
 
     tab_prepare, tab_file = st.tabs(["Preparar ráfaga", "Cargar ráfaga (JSON)"])
     with tab_prepare:
@@ -31,6 +32,7 @@ def render_queue_page():
     _render_controls()
     render_queue(scenery.queue)
     render_step_result(st.session_state.get("queue_last_step"))
+    render_resolution_guide()
 
 
 def advance_continuous_queue():
@@ -57,21 +59,24 @@ def _render_prepare_tab():
 
     clock = scenery.simulation_clock.current_time
     with st.form("queue_burst_form"):
-        st.caption("Cada estación elegida emite un reporte con estos mismos datos. "
-                   "No se aplican: entran a la cola.")
-        event_id = st.number_input("ID del evento", min_value=1, max_value=999999, step=1, key="queue_event_id")
-        revision = st.number_input("Revisión", min_value=1, step=1, key="queue_revision")
-        magnitude = st.number_input("Magnitud", min_value=-2.0, max_value=10.0, step=0.1, format="%.1f",
-                                    key="queue_magnitude")
-        depth_km = st.number_input("Profundidad (km)", min_value=0.0, max_value=700.0, step=0.1, format="%.1f",
-                                   key="queue_depth")
-        epicenter_x = st.number_input("Epicentro X", min_value=0.0, max_value=1000.0, step=0.1, format="%.1f",
-                                      key="queue_x")
-        epicenter_y = st.number_input("Epicentro Y", min_value=0.0, max_value=1000.0, step=0.1, format="%.1f",
-                                      key="queue_y")
-        occurred_date = st.date_input("Fecha de ocurrencia (UTC)", value=clock.date(), key="queue_date")
-        occurred_time = st.time_input("Hora de ocurrencia (UTC)", value=clock.time().replace(microsecond=0),
-                                      key="queue_time")
+        st.caption("Configura una ráfaga: cada estación seleccionada genera un reporte con estos datos. "
+                   "La ráfaga se encola completa y no se aplica hasta procesarla.")
+        col_id, col_revision, col_magnitude = st.columns(3)
+        event_id = col_id.number_input("ID del evento", min_value=1, max_value=999999, step=1, key="queue_event_id")
+        revision = col_revision.number_input("Revisión", min_value=1, step=1, key="queue_revision")
+        magnitude = col_magnitude.number_input("Magnitud", min_value=-2.0, max_value=10.0, step=0.1,
+                                               format="%.1f", key="queue_magnitude")
+        col_depth, col_x, col_y = st.columns(3)
+        depth_km = col_depth.number_input("Profundidad (km)", min_value=0.0, max_value=700.0, step=0.1,
+                                          format="%.1f", key="queue_depth")
+        epicenter_x = col_x.number_input("Epicentro X", min_value=0.0, max_value=1000.0, step=0.1,
+                                         format="%.1f", key="queue_x")
+        epicenter_y = col_y.number_input("Epicentro Y", min_value=0.0, max_value=1000.0, step=0.1,
+                                         format="%.1f", key="queue_y")
+        col_date, col_time = st.columns(2)
+        occurred_date = col_date.date_input("Fecha de ocurrencia (UTC)", value=clock.date(), key="queue_date")
+        occurred_time = col_time.time_input("Hora de ocurrencia (UTC)", value=clock.time().replace(microsecond=0),
+                                            key="queue_time")
         stations = st.multiselect("Estaciones que reportan", list(scenery.stations.keys()),
                                   default=list(scenery.stations.keys())[:1], key="queue_stations")
         submitted = st.form_submit_button("Agregar ráfaga a la cola")

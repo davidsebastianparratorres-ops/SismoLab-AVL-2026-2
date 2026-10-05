@@ -2,23 +2,12 @@ import streamlit as st
 
 from src.controllers.BranchArchiver import BranchArchiver
 from src.controllers.VersionStore import VersionStore
-from src.presentation.pages.flash import show_flash, flash_and_rerun
+from src.presentation.pages.flash import flash_and_rerun
 from src.presentation.views.structure_view import render_archive_preview, render_versions
 
 
-def render_structure_page():
-    """Archive of old branches (section 10) and named versions (section 13). Entering stress
-    mode and the global recovery already live in the configuration page."""
-    st.markdown("### Archivo y versiones")
-    show_flash("structure")
-    tab_archive, tab_versions = st.tabs(["Archivar rama antigua", "Versiones"])
-    with tab_archive:
-        _render_archive_tab()
-    with tab_versions:
-        _render_versions_tab()
-
-
-def _render_archive_tab():
+def render_archive_panel():
+    """Archive of an old branch (section 10): preview first, then confirm."""
     scenery = st.session_state.scenery
     archiver = BranchArchiver(scenery)
     st.caption(f"Es elegible una rama cuyos eventos son todos de prioridad baja y de más de "
@@ -38,7 +27,8 @@ def _render_archive_tab():
         flash_and_rerun("structure", "success" if result.success else "error", result.message)
 
 
-def _render_versions_tab():
+def render_versions_panel():
+    """Named versions (section 13): save, list and restore."""
     scenery = st.session_state.scenery
     directory = st.text_input("Carpeta de versiones", value="versions", key="versions_dir")
     store = VersionStore(directory)

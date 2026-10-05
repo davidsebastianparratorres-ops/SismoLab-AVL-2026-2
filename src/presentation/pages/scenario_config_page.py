@@ -150,37 +150,25 @@ def _render_clock_tab():
 
 
 def _render_audit_tab():
-    """'Verificar estructura' (sección 14) y el cambio de modo de ejecución
-    (sección 8). StressManager se crea aquí mismo en cada llamada porque no
+    """'Verificar estructura' (sección 14). StressManager se crea aquí mismo porque no
     guarda ningún estado propio - solo orquesta sobre scenery, al contrario
     de AssociationManager, que sí necesita ser el mismo objeto persistente
     entre llamadas (ver Scenery.__init__ y la corrección en event_crud_page)."""
     scenery = st.session_state.scenery
     manager = StressManager(scenery)
 
-    col_enter, col_recover = st.columns(2)
-
-    with col_enter:
-        if st.button("Entrar en modo estrés", disabled=scenery.stress_mode, key="enter_stress_button"):
-            result = manager.enter_stress()
-            if result.success:
-                st.success(result.message)
-            else:
-                st.warning(result.message)
-
-    with col_recover:
-        if st.button("Recuperación global", disabled=not scenery.stress_mode, key="recover_button"):
-            recovery = manager.recover()
-            if recovery.success:
-                st.success(recovery.message)
-            else:
-                st.error(recovery.message)
-            if recovery.rotations:
-                st.caption("Costo de la recuperación: " + ", ".join(
-                    f"{name}={value}" for name, value in recovery.rotations.items()
-                ))
-            if recovery.audit is not None:
-                render_audit_report(recovery.audit)
+    if st.button("Recuperación global", disabled=not scenery.stress_mode, key="recover_button"):
+        recovery = manager.recover()
+        if recovery.success:
+            st.success(recovery.message)
+        else:
+            st.error(recovery.message)
+        if recovery.rotations:
+            st.caption("Costo de la recuperación: " + ", ".join(
+                f"{name}={value}" for name, value in recovery.rotations.items()
+            ))
+        if recovery.audit is not None:
+            render_audit_report(recovery.audit)
 
     # Read down here, after the two buttons above were already handled
     # this run - same reordering reasoning as the clock tab.

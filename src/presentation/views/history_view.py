@@ -2,29 +2,49 @@ import streamlit as st
 
 
 def render_historic(scenery):
-    # CHANGED: used to take a Historic instance (historic.get_all_archived(),
-    # historic.get_eliminated_ids()). Since Option A made Scenery the single
-    # source of truth, archived/eliminated events now live directly on
-    # Scenery (scenery.archived_events, a dict; scenery.eliminated_ids, a
-    # set) instead of a separate Historic object, so this reads them
-    # straight off scenery.
     st.markdown("### Histórico")
 
     archived = scenery.archived_events
-    if archived:
-        rows = [
-            {"ID": event_id, "Magnitud": event.getMagnitude(), "Estado": event.getStatus()}
-            for event_id, event in archived.items()
-        ]
-        st.table(rows)
-    else:
-        st.caption("No hay eventos archivados todavía.")
-
     eliminated = scenery.eliminated_ids
-    if eliminated:
-        st.markdown("**Eliminados:** " + ", ".join(str(i) for i in sorted(eliminated)))
+    total_col, removed_col = st.columns(2)
+    total_col.metric("Eventos archivados", len(archived))
+    removed_col.metric("IDs eliminados", len(eliminated))
+
+    st.markdown("#### Archivados · identidad y datos conservados")
+    st.caption("Ya no pertenecen al AVL activo. Un reporte con revisión mayor puede reactivarlos.")
+    if archived:
+        for event_id, event in sorted(archived.items()):
+            epicenter = event.getEpicenter()
+            with st.container(border=True):
+                st.markdown(f"**Evento {event_id}** · Archivado")
+                info = st.columns(4)
+                info[0].markdown(f"**Magnitud**  \n{event.getMagnitude():.1f}")
+                info[1].markdown(f"**Profundidad**  \n{event.getDepth_km():.1f} km")
+                info[2].markdown(f"**Revisión**  \n{event.getReview()}")
+                info[3].markdown(f"**Prioridad**  \n{event.getPriority()}")
+                st.caption(
+                    f"Estado de atención: {event.getStatus()} · "
+                    f"Epicentro: ({epicenter.getX()}, {epicenter.getY()}) · "
+                    f"Ocurrencia: {event.getOcurredAt()}"
+                )
+                stations = event.getStations()
+                associations = event.getAssociatedEvents()
+                st.markdown(
+                    f"**Estaciones:** {', '.join(stations) if stations else 'Ninguna'}  \n"
+                    f"**Asociaciones conservadas:** "
+                    f"{', '.join(str(item) for item in associations) if associations else 'Ninguna'}"
+                )
     else:
-        st.caption("No hay eventos eliminados todavía.")
+        st.info("No hay eventos archivados todavía.")
+
+    st.markdown("#### Identificadores eliminados")
+    st.caption("Estos IDs no se reutilizan: los reportes recibidos para ellos se rechazan "
+               "hasta que se deshaga la eliminación.")
+    if eliminated:
+        with st.container(border=True):
+            st.markdown(" · ".join(f"`{event_id}`" for event_id in sorted(eliminated)))
+    else:
+        st.info("No hay identificadores eliminados.")
 
 
 def render_undo_redo_controls(history):
