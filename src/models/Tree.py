@@ -68,46 +68,6 @@ class Tree:
         # Balance factor is computed as left_height - right_height.
         node.setBalanceFactor(left_height - right_height)
 
-    # ------------------------------------------------------------------
-    # Read-only measurements shared by AVL and BST (used to compare them)
-    # ------------------------------------------------------------------
-    def search_cost(self, key_tuple):
-        """Nodes visited from the root until the key is found (depth + 1, section 9).
-        Returns None when the key is not in the tree. Iterative on purpose."""
-        node, visited = self.getRoot(), 0
-        while node is not None:
-            visited += 1
-            node_key = node.getKey().as_tuple
-            if key_tuple == node_key:
-                return visited
-            node = node.getLeft() if key_tuple < node_key else node.getRight()
-        return None
-
-    def shape(self):
-        """Structure recomputed from the links (never from stored heights):
-        {'nodes', 'leaves', 'height', 'max_depth'}; the empty tree has height -1."""
-        root = self.getRoot()
-        if root is None:
-            return {"nodes": 0, "leaves": 0, "height": -1, "max_depth": -1}
-        order, max_depth, leaves = [], 0, 0
-        stack = [(root, 0)]
-        while stack:
-            node, depth = stack.pop()
-            order.append(node)
-            max_depth = max(max_depth, depth)
-            if node.getLeft() is None and node.getRight() is None:
-                leaves += 1
-            if node.getRight() is not None:
-                stack.append((node.getRight(), depth + 1))
-            if node.getLeft() is not None:
-                stack.append((node.getLeft(), depth + 1))
-        heights = {}
-        for node in reversed(order):  # children are processed before their parent
-            left = heights[id(node.getLeft())] if node.getLeft() is not None else -1
-            right = heights[id(node.getRight())] if node.getRight() is not None else -1
-            heights[id(node)] = 1 + max(left, right)
-        return {"nodes": len(order), "leaves": leaves, "height": heights[id(root)], "max_depth": max_depth}
-
     def _after_insert(self, node):
         # Default behavior for a plain BST: do nothing after insertion.
         return node

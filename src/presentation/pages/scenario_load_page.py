@@ -36,7 +36,6 @@ def _load_topology(filepath: str):
         return
 
     package.apply(st.session_state.scenery, result.state)
-    st.session_state.pop("insertion_sequence", None)  # a topology has no insertion order
 
     imbalanced = result.state["imbalanced"]
     if result.state["stress_mode"]:
@@ -52,10 +51,6 @@ def _load_insertion(filepath: str):
     zones = st.session_state.scenery.zones
     result = InsertionIO().load(filepath, zones)
     _apply_result(result)
-    if result.success:
-        # The file's order is the insertion order the AVL vs BST comparison must replay.
-        st.session_state["insertion_sequence"] = list(result.events)
-        st.info("La pestaña «AVL vs BST» muestra ambos árboles con este mismo orden de inserción.")
 
 
 def _apply_result(result):
