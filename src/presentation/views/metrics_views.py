@@ -153,7 +153,7 @@ def render_tree_metrics(scenery):
     else:
         st.caption("Ningún evento de prioridad alta supera el límite.")
 
-    with st.expander("Recorridos del árbol (identificadores de evento)"):
+    with st.expander("Recorridos del árbol (identificadores de evento)", expanded=True):
         order = traversals(scenery.tree.getRoot())
         st.markdown("**Inorden** (claves ascendentes)")
         st.write(_arrow_list(order["inorder"]))
