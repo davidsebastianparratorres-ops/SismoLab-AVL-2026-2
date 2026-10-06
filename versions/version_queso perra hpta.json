@@ -1,0 +1,360 @@
+{
+  "tipo": "VERSION",
+  "nombre": "Queso perra hpta",
+  "guardada": "2026-10-05T18:39:44Z",
+  "escenario": {
+    "tipo": "ESCENARIO",
+    "version": 1,
+    "modo": "NORMAL",
+    "reloj": {
+      "current_time": "2026-10-05T18:28:30Z"
+    },
+    "parametros": {
+      "W": 48.0,
+      "R": 40.0,
+      "L": 3,
+      "T": 72.0
+    },
+    "metricas": {
+      "corrections_accepted": 0,
+      "reports_discarded": 0,
+      "conflicts": 0,
+      "mass_archives": 1,
+      "events_archived": 7,
+      "case_LL": 0,
+      "case_RR": 3,
+      "case_LR": 0,
+      "case_RL": 0,
+      "rotations_left": 3,
+      "rotations_right": 0
+    },
+    "zonas": [],
+    "estaciones": {
+      "EST-01": "EST-01"
+    },
+    "arbol": {
+      "event_id": 511,
+      "key": {
+        "priority": 2,
+        "magnitude": 5.6,
+        "identifier": 511
+      },
+      "altura": 3,
+      "factorEquilibrio": 1,
+      "izquierdo": {
+        "event_id": 509,
+        "key": {
+          "priority": 2,
+          "magnitude": 4.8,
+          "identifier": 509
+        },
+        "altura": 2,
+        "factorEquilibrio": 1,
+        "izquierdo": {
+          "event_id": 507,
+          "key": {
+            "priority": 1,
+            "magnitude": 4.4,
+            "identifier": 507
+          },
+          "altura": 1,
+          "factorEquilibrio": -1,
+          "izquierdo": null,
+          "derecho": {
+            "event_id": 508,
+            "key": {
+              "priority": 2,
+              "magnitude": 4.5,
+              "identifier": 508
+            },
+            "altura": 0,
+            "factorEquilibrio": 0,
+            "izquierdo": null,
+            "derecho": null
+          }
+        },
+        "derecho": {
+          "event_id": 510,
+          "key": {
+            "priority": 2,
+            "magnitude": 5.2,
+            "identifier": 510
+          },
+          "altura": 0,
+          "factorEquilibrio": 0,
+          "izquierdo": null,
+          "derecho": null
+        }
+      },
+      "derecho": {
+        "event_id": 513,
+        "key": {
+          "priority": 3,
+          "magnitude": 6.5,
+          "identifier": 513
+        },
+        "altura": 1,
+        "factorEquilibrio": 0,
+        "izquierdo": {
+          "event_id": 512,
+          "key": {
+            "priority": 3,
+            "magnitude": 6.0,
+            "identifier": 512
+          },
+          "altura": 0,
+          "factorEquilibrio": 0,
+          "izquierdo": null,
+          "derecho": null
+        },
+        "derecho": {
+          "event_id": 514,
+          "key": {
+            "priority": 3,
+            "magnitude": 7.2,
+            "identifier": 514
+          },
+          "altura": 0,
+          "factorEquilibrio": 0,
+          "izquierdo": null,
+          "derecho": null
+        }
+      }
+    },
+    "eventos_activos": {
+      "507": {
+        "magnitude": 4.4,
+        "depth": 15.0,
+        "epicenter": {
+          "x": 170.0,
+          "y": 200.0
+        },
+        "status": "PENDING",
+        "stations": [
+          "EST-01"
+        ],
+        "ocurredAt": "2026-09-02T10:00:00Z",
+        "priority": 1,
+        "review": 1
+      },
+      "508": {
+        "magnitude": 4.5,
+        "depth": 80.0,
+        "epicenter": {
+          "x": 180.0,
+          "y": 200.0
+        },
+        "status": "PENDING",
+        "stations": [
+          "EST-01"
+        ],
+        "ocurredAt": "2026-09-02T11:00:00Z",
+        "priority": 2,
+        "review": 1
+      },
+      "509": {
+        "magnitude": 4.8,
+        "depth": 80.0,
+        "epicenter": {
+          "x": 190.0,
+          "y": 200.0
+        },
+        "status": "PENDING",
+        "stations": [
+          "EST-01"
+        ],
+        "ocurredAt": "2026-09-02T12:00:00Z",
+        "priority": 2,
+        "review": 1
+      },
+      "510": {
+        "magnitude": 5.2,
+        "depth": 80.0,
+        "epicenter": {
+          "x": 200.0,
+          "y": 200.0
+        },
+        "status": "PENDING",
+        "stations": [
+          "EST-01"
+        ],
+        "ocurredAt": "2026-09-03T08:00:00Z",
+        "priority": 2,
+        "review": 1
+      },
+      "511": {
+        "magnitude": 5.6,
+        "depth": 80.0,
+        "epicenter": {
+          "x": 210.0,
+          "y": 200.0
+        },
+        "status": "PENDING",
+        "stations": [
+          "EST-01"
+        ],
+        "ocurredAt": "2026-09-03T09:00:00Z",
+        "priority": 2,
+        "review": 1
+      },
+      "512": {
+        "magnitude": 6.0,
+        "depth": 15.0,
+        "epicenter": {
+          "x": 220.0,
+          "y": 200.0
+        },
+        "status": "PENDING",
+        "stations": [
+          "EST-01"
+        ],
+        "ocurredAt": "2026-09-03T10:00:00Z",
+        "priority": 3,
+        "review": 1
+      },
+      "513": {
+        "magnitude": 6.5,
+        "depth": 15.0,
+        "epicenter": {
+          "x": 230.0,
+          "y": 200.0
+        },
+        "status": "PENDING",
+        "stations": [
+          "EST-01"
+        ],
+        "ocurredAt": "2026-09-03T11:00:00Z",
+        "priority": 3,
+        "review": 1
+      },
+      "514": {
+        "magnitude": 7.2,
+        "depth": 15.0,
+        "epicenter": {
+          "x": 240.0,
+          "y": 200.0
+        },
+        "status": "PENDING",
+        "stations": [
+          "EST-01"
+        ],
+        "ocurredAt": "2026-09-03T12:00:00Z",
+        "priority": 3,
+        "review": 1
+      }
+    },
+    "historico": {
+      "archivados": {
+        "500": {
+          "magnitude": 1.0,
+          "depth": 15.0,
+          "epicenter": {
+            "x": 100.0,
+            "y": 200.0
+          },
+          "status": "PENDING",
+          "stations": [
+            "EST-01"
+          ],
+          "ocurredAt": "2026-09-01T08:00:00Z",
+          "priority": 1,
+          "review": 1
+        },
+        "502": {
+          "magnitude": 2.0,
+          "depth": 15.0,
+          "epicenter": {
+            "x": 120.0,
+            "y": 200.0
+          },
+          "status": "PENDING",
+          "stations": [
+            "EST-01"
+          ],
+          "ocurredAt": "2026-09-01T10:00:00Z",
+          "priority": 1,
+          "review": 1
+        },
+        "501": {
+          "magnitude": 1.5,
+          "depth": 15.0,
+          "epicenter": {
+            "x": 110.0,
+            "y": 200.0
+          },
+          "status": "PENDING",
+          "stations": [
+            "EST-01"
+          ],
+          "ocurredAt": "2026-09-01T09:00:00Z",
+          "priority": 1,
+          "review": 1
+        },
+        "504": {
+          "magnitude": 3.0,
+          "depth": 15.0,
+          "epicenter": {
+            "x": 140.0,
+            "y": 200.0
+          },
+          "status": "PENDING",
+          "stations": [
+            "EST-01"
+          ],
+          "ocurredAt": "2026-09-01T12:00:00Z",
+          "priority": 1,
+          "review": 1
+        },
+        "506": {
+          "magnitude": 4.0,
+          "depth": 15.0,
+          "epicenter": {
+            "x": 160.0,
+            "y": 200.0
+          },
+          "status": "PENDING",
+          "stations": [
+            "EST-01"
+          ],
+          "ocurredAt": "2026-09-02T09:00:00Z",
+          "priority": 1,
+          "review": 1
+        },
+        "505": {
+          "magnitude": 3.5,
+          "depth": 15.0,
+          "epicenter": {
+            "x": 150.0,
+            "y": 200.0
+          },
+          "status": "PENDING",
+          "stations": [
+            "EST-01"
+          ],
+          "ocurredAt": "2026-09-02T08:00:00Z",
+          "priority": 1,
+          "review": 1
+        },
+        "503": {
+          "magnitude": 2.5,
+          "depth": 15.0,
+          "epicenter": {
+            "x": 130.0,
+            "y": 200.0
+          },
+          "status": "PENDING",
+          "stations": [
+            "EST-01"
+          ],
+          "ocurredAt": "2026-09-01T11:00:00Z",
+          "priority": 1,
+          "review": 1
+        }
+      },
+      "eliminados": []
+    },
+    "asociaciones": {},
+    "cola": [],
+    "extras": {}
+  }
+}
