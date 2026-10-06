@@ -17,7 +17,6 @@ from src.presentation.pages.scenario_config_page import render_scenario_config_p
 from src.presentation.pages.scenario_load_page import render_scenario_load_page
 from src.presentation.pages.scenario_package_page import render_scenario_package_page
 from src.presentation.pages.session_state import init_session_state
-from src.presentation.pages.structure_page import render_structure_page
 from src.presentation.views.metrics_views import render_tree_metrics
 from src.presentation.views.history_view import render_historic, render_undo_redo_controls
 from src.presentation.views.spatial_view import render_spatial_map
@@ -49,23 +48,25 @@ def main():
 
     with right:
         render_undo_redo_controls(scenery.history)
-        tab_tree, tab_spatial, tab_historic, tab_queue, tab_compare, tab_structure = st.tabs(
-            ["Árbol", "Plano X/Y", "Histórico", f"Cola ({len(scenery.queue)})",
-             "AVL vs BST", "Archivo y versiones"]
+        views = ["Árbol", "Plano X/Y", "Histórico", "Cola", "AVL vs BST"]
+        selected_view = st.radio(
+            "Vista principal",
+            views,
+            horizontal=True,
+            label_visibility="collapsed",
+            key="main_view",
         )
-        with tab_tree:
-            render_tree(scenery.tree.getRoot())
+        if selected_view == "Árbol":
+            render_tree(scenery.tree.getRoot(), scenery=scenery)
             render_tree_metrics(scenery)
-        with tab_spatial:
+        elif selected_view == "Plano X/Y":
             render_spatial_map(scenery)
-        with tab_historic:
+        elif selected_view == "Histórico":
             render_historic(scenery)
-        with tab_queue:
+        elif selected_view == "Cola":
             render_queue_page()
-        with tab_compare:
+        elif selected_view == "AVL vs BST":
             render_comparison_page()
-        with tab_structure:
-            render_structure_page()
 
     with action_bar:
         render_action_bar()

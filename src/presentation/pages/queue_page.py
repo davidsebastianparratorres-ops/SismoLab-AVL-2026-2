@@ -8,7 +8,12 @@ from src.controllers.ReportProcessor import ReportProcessor
 from src.models.Report import Report, ReportQueue
 from src.presentation.pages.flash import show_flash, flash_and_rerun
 from src.presentation.views.error_view import render_errors
-from src.presentation.views.queue_view import render_queue, render_resolution_guide, render_step_result
+from src.presentation.views.queue_view import (
+    render_queue,
+    render_queue_history,
+    render_resolution_guide,
+    render_step_result,
+)
 
 
 def render_queue_page():
@@ -16,12 +21,9 @@ def render_queue_page():
     Every action stores its result in session_state and reruns the app, so the tree, the undo
     buttons and this page always show the same, already updated, state."""
     scenery = st.session_state.scenery
-    st.markdown("### Cola FIFO de reportes")
+    st.markdown(f"### Cola FIFO de reportes ({len(scenery.queue)})")
     st.caption("Recepción, orden de llegada y procesamiento controlado de reportes sísmicos.")
     show_flash("queue")
-
-    if scenery.stress_mode:
-        st.warning("Modo estrés activo: los reportes se procesan en orden, pero las rotaciones se aplazan.")
 
     tab_prepare, tab_file = st.tabs(["Preparar ráfaga", "Cargar ráfaga (JSON)"])
     with tab_prepare:
@@ -32,6 +34,7 @@ def render_queue_page():
     _render_controls()
     render_queue(scenery.queue)
     render_step_result(st.session_state.get("queue_last_step"))
+    render_queue_history(st.session_state.get("queue_processing_history", []))
     render_resolution_guide()
 
 
@@ -46,6 +49,7 @@ def advance_continuous_queue():
         st.session_state.queue_running = False
         st.rerun()
     st.session_state.queue_last_step = ReportProcessor(scenery).process_next()
+    _record_queue_step(st.session_state.queue_last_step)
     time.sleep(st.session_state.get("queue_delay", 1.0))
     st.session_state.queue_auto = True
     st.rerun()
@@ -131,6 +135,7 @@ def _render_controls():
                            key="queue_delay")
     if col_step.button("Procesar un paso", disabled=empty or running, key="queue_step_button"):
         st.session_state.queue_last_step = ReportProcessor(scenery).process_next()
+        _record_queue_step(st.session_state.queue_last_step)
         st.rerun()
     if col_run.button("Procesar continuo", disabled=empty or running, key="queue_run_button"):
         st.session_state.queue_running = True
@@ -141,3 +146,8 @@ def _render_controls():
         st.rerun()
     if running:
         st.info("Procesamiento continuo en curso. Cualquier otra acción lo pausa.")
+
+
+def _record_queue_step(step):
+    if step is not None:
+        st.session_state.setdefault("queue_processing_history", []).append(step)
