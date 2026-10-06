@@ -84,3 +84,25 @@ def render_step_result(step):
             st.caption(describe_rotations(step.rotations))
         else:
             st.caption("Sin rotaciones en este paso.")
+
+
+def render_queue_history(history):
+    """Show every processed report and its outcome, including imported bursts."""
+    st.markdown("#### Historial de procesamiento")
+    with st.expander(f"Pasos procesados ({len(history)})", expanded=False):
+        if not history:
+            st.caption("Los resultados aparecerán aquí al procesar reportes.")
+            return
+
+        for index, step in enumerate(reversed(history), start=1):
+            level, title = _DECISIONS.get(step.decision, ("info", step.decision))
+            with st.container(border=True):
+                st.markdown(
+                    f"**Paso {len(history) - index + 1} · Evento {step.report.event_id}** "
+                    f"· Estación {step.report.station_id} · Revisión {step.report.revision}"
+                )
+                getattr(st, level)(f"**{title}.** {step.message}")
+                if step.rotations:
+                    st.caption("Rotaciones: " + describe_rotations(step.rotations))
+                else:
+                    st.caption("Sin rotaciones.")

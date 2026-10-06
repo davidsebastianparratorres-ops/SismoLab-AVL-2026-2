@@ -49,22 +49,26 @@ def main():
 
     with right:
         render_undo_redo_controls(scenery.history)
-        tab_tree, tab_spatial, tab_historic, tab_queue, tab_compare, tab_structure = st.tabs(
-            ["Árbol", "Plano X/Y", "Histórico", f"Cola ({len(scenery.queue)})",
-             "AVL vs BST", "Archivo y versiones"]
+        views = ["Árbol", "Plano X/Y", "Histórico", "Cola", "AVL vs BST", "Archivo y versiones"]
+        selected_view = st.radio(
+            "Vista principal",
+            views,
+            horizontal=True,
+            label_visibility="collapsed",
+            key="main_view",
         )
-        with tab_tree:
-            render_tree(scenery.tree.getRoot())
+        if selected_view == "Árbol":
+            render_tree(scenery.tree.getRoot(), scenery=scenery)
             render_tree_metrics(scenery)
-        with tab_spatial:
+        elif selected_view == "Plano X/Y":
             render_spatial_map(scenery)
-        with tab_historic:
+        elif selected_view == "Histórico":
             render_historic(scenery)
-        with tab_queue:
+        elif selected_view == "Cola":
             render_queue_page()
-        with tab_compare:
+        elif selected_view == "AVL vs BST":
             render_comparison_page()
-        with tab_structure:
+        elif selected_view == "Archivo y versiones":
             render_structure_page()
 
     with action_bar:
