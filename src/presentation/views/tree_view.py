@@ -1,6 +1,6 @@
 import streamlit as st
 import networkx as nx
-import plotly.graph_objects as go
+import plotly.graph_objects as go # type: ignore
 
 from src.presentation.styles.theme import (
     TREE_NORMAL_NODE_COLOR,
@@ -85,33 +85,49 @@ def render_tree(root, highlight_id=None, scenery=None):
 
     node_ids = list(G.nodes())
     node_colors = [
-        TREE_HIGHLIGHT_NODE_COLOR if n == str(highlight_id)
-        else TREE_UNBALANCED_NODE_COLOR if G.nodes[n]["unbalanced"]
-        else TREE_NORMAL_NODE_COLOR
+        (
+            TREE_HIGHLIGHT_NODE_COLOR
+            if n == str(highlight_id)
+            else (
+                TREE_UNBALANCED_NODE_COLOR
+                if G.nodes[n]["unbalanced"]
+                else TREE_NORMAL_NODE_COLOR
+            )
+        )
         for n in node_ids
     ]
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=edge_x,
-        y=edge_y,
-        mode="lines",
-        line={"color": TREE_EDGE_COLOR, "width": 2},
-        hoverinfo="skip",
-        showlegend=False,
-    ))
-    fig.add_trace(go.Scatter(
-        x=[pos[node_id][0] for node_id in node_ids],
-        y=[pos[node_id][1] for node_id in node_ids],
-        mode="markers+text",
-        text=node_ids,
-        customdata=node_ids,
-        textposition="middle center",
-        textfont={"color": TREE_FONT_COLOR},
-        marker={"color": node_colors, "size": 38, "line": {"color": "white", "width": 1}},
-        hovertemplate="Evento %{customdata}<extra></extra>",
-        showlegend=False,
-    ))
-    tree_levels = int(max(y for _, y in pos.values()) - min(y for _, y in pos.values())) + 1
+    fig.add_trace(
+        go.Scatter(
+            x=edge_x,
+            y=edge_y,
+            mode="lines",
+            line={"color": TREE_EDGE_COLOR, "width": 2},
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=[pos[node_id][0] for node_id in node_ids],
+            y=[pos[node_id][1] for node_id in node_ids],
+            mode="markers+text",
+            text=node_ids,
+            customdata=node_ids,
+            textposition="middle center",
+            textfont={"color": TREE_FONT_COLOR},
+            marker={
+                "color": node_colors,
+                "size": 38,
+                "line": {"color": "white", "width": 1},
+            },
+            hovertemplate="Evento %{customdata}<extra></extra>",
+            showlegend=False,
+        )
+    )
+    tree_levels = (
+        int(max(y for _, y in pos.values()) - min(y for _, y in pos.values())) + 1
+    )
     fig.update_layout(
         height=max(420, 100 + 85 * tree_levels),
         margin={"l": 20, "r": 20, "t": 20, "b": 20},
@@ -143,7 +159,9 @@ def render_tree(root, highlight_id=None, scenery=None):
 
     unbalanced = sum(1 for _, flag in G.nodes(data="unbalanced") if flag)
     if unbalanced:
-        st.caption(f"Naranja: {unbalanced} nodo(s) con |factor de balance| > 1 (el árbol no cumple AVL).")
+        st.caption(
+            f"Naranja: {unbalanced} nodo(s) con |factor de balance| > 1 (el árbol no cumple AVL)."
+        )
 
 
 # NOTE: render_tree_queries (Section 11 query panel) used to live here,
