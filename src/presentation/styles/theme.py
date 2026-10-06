@@ -2,6 +2,7 @@ PAGE_CSS = """
 <style>
 [data-testid="stAppViewContainer"] {
     background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
+    font-size: 0.9rem;
 }
 [data-testid="stHeader"] {
     background: rgba(248, 250, 252, 0.86);
@@ -21,6 +22,26 @@ button {
 }
 h1, h2, h3 {
     color: #1e293b;
+}
+[data-testid="stMarkdownContainer"] h1 {
+    font-size: 1.8rem;
+}
+[data-testid="stMarkdownContainer"] h2 {
+    font-size: 1.45rem;
+}
+[data-testid="stMarkdownContainer"] h3 {
+    font-size: 1.2rem;
+}
+[data-testid="stMarkdownContainer"] h4 {
+    font-size: 1rem;
+}
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stCaptionContainer"],
+[data-testid="stWidgetLabel"],
+[data-testid="stMetricLabel"],
+[data-testid="stMetricValue"],
+button {
+    font-size: 0.88rem;
 }
 [data-testid="stMetric"] {
     background: #ffffff;
@@ -54,5 +75,4 @@ SPATIAL_UNPOPULATED_ZONE_COLOR = "#457b9d"
 SPATIAL_EVENT_COLOR = "#d62828"
 SPATIAL_EVENT_MARKER_SIZE = 50
 SPATIAL_LABEL_FONT_SIZE = 7
-
 

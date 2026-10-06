@@ -17,7 +17,6 @@ from src.presentation.pages.scenario_config_page import render_scenario_config_p
 from src.presentation.pages.scenario_load_page import render_scenario_load_page
 from src.presentation.pages.scenario_package_page import render_scenario_package_page
 from src.presentation.pages.session_state import init_session_state
-from src.presentation.pages.structure_page import render_structure_page
 from src.presentation.views.metrics_views import render_tree_metrics
 from src.presentation.views.history_view import render_historic, render_undo_redo_controls
 from src.presentation.views.spatial_view import render_spatial_map
@@ -49,7 +48,7 @@ def main():
 
     with right:
         render_undo_redo_controls(scenery.history)
-        views = ["Árbol", "Plano X/Y", "Histórico", "Cola", "AVL vs BST", "Archivo y versiones"]
+        views = ["Árbol", "Plano X/Y", "Histórico", "Cola", "AVL vs BST"]
         selected_view = st.radio(
             "Vista principal",
             views,
@@ -68,8 +67,6 @@ def main():
             render_queue_page()
         elif selected_view == "AVL vs BST":
             render_comparison_page()
-        elif selected_view == "Archivo y versiones":
-            render_structure_page()
 
     with action_bar:
         render_action_bar()
