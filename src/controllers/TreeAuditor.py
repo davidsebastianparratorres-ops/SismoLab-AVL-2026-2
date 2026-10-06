@@ -217,7 +217,7 @@ class TreeAuditor:
                     report.add(
                         event_id,
                         IssueCategory.EXPECTED_IMBALANCE,
-                        f"El factor de balance {actual_bf} supera los li­mites de AVL (esperado durante el modo de estrÃ©s).",
+                        f"El factor de balance {actual_bf} supera los li­mites de AVL (esperado durante el modo de estrés).",
                         Severity.INFO  
                     )
                 else:
