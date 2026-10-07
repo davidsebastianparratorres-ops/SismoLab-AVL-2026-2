@@ -43,8 +43,8 @@
       "magnitude": 4.3,
       "identifier": 312
     },
-    "altura": 4,
-    "factorEquilibrio": 3,
+    "altura": 5,
+    "factorEquilibrio": 4,
     "izquierdo": {
       "event_id": 304,
       "key": {
@@ -52,8 +52,8 @@
         "magnitude": 2.5,
         "identifier": 304
       },
-      "altura": 3,
-      "factorEquilibrio": -1,
+      "altura": 4,
+      "factorEquilibrio": -2,
       "izquierdo": {
         "event_id": 302,
         "key": {
@@ -95,8 +95,8 @@
           "magnitude": 3.6,
           "identifier": 308
         },
-        "altura": 2,
-        "factorEquilibrio": 0,
+        "altura": 3,
+        "factorEquilibrio": -1,
         "izquierdo": {
           "event_id": 306,
           "key": {
@@ -138,7 +138,7 @@
             "magnitude": 4.0,
             "identifier": 310
           },
-          "altura": 1,
+          "altura": 2,
           "factorEquilibrio": 0,
           "izquierdo": {
             "event_id": 309,
@@ -147,10 +147,32 @@
               "magnitude": 3.8,
               "identifier": 309
             },
-            "altura": 0,
+            "altura": 1,
             "factorEquilibrio": 0,
-            "izquierdo": null,
-            "derecho": null
+            "izquierdo": {
+              "event_id": 314,
+              "key": {
+                "priority": 1,
+                "magnitude": 3.7,
+                "identifier": 314
+              },
+              "altura": 0,
+              "factorEquilibrio": 0,
+              "izquierdo": null,
+              "derecho": null
+            },
+            "derecho": {
+              "event_id": 315,
+              "key": {
+                "priority": 1,
+                "magnitude": 3.9,
+                "identifier": 315
+              },
+              "altura": 0,
+              "factorEquilibrio": 0,
+              "izquierdo": null,
+              "derecho": null
+            }
           },
           "derecho": {
             "event_id": 311,
@@ -159,9 +181,20 @@
               "magnitude": 4.2,
               "identifier": 311
             },
-            "altura": 0,
-            "factorEquilibrio": 0,
-            "izquierdo": null,
+            "altura": 1,
+            "factorEquilibrio": 1,
+            "izquierdo": {
+              "event_id": 316,
+              "key": {
+                "priority": 1,
+                "magnitude": 4.1,
+                "identifier": 316
+              },
+              "altura": 0,
+              "factorEquilibrio": 0,
+              "izquierdo": null,
+              "derecho": null
+            },
             "derecho": null
           }
         }
@@ -375,6 +408,51 @@
       "ocurredAt": "2026-10-02T11:00:00Z",
       "priority": 2,
       "review": 1
+    },
+    "314": {
+      "magnitude": 3.7,
+      "depth": 50.0,
+      "epicenter": {
+        "x": 100.0,
+        "y": 100.0
+      },
+      "status": "PENDING",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-10-02T12:00:00Z",
+      "priority": 1,
+      "review": 1
+    },
+    "315": {
+      "magnitude": 3.9,
+      "depth": 50.0,
+      "epicenter": {
+        "x": 100.0,
+        "y": 100.0
+      },
+      "status": "PENDING",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-10-02T12:01:00Z",
+      "priority": 1,
+      "review": 1
+    },
+    "316": {
+      "magnitude": 4.1,
+      "depth": 50.0,
+      "epicenter": {
+        "x": 100.0,
+        "y": 100.0
+      },
+      "status": "PENDING",
+      "stations": [
+        "EST-01"
+      ],
+      "ocurredAt": "2026-10-02T12:02:00Z",
+      "priority": 1,
+      "review": 1
     }
   },
   "historico": {
@@ -391,7 +469,10 @@
     "309": 313,
     "310": 313,
     "311": 313,
-    "312": 313
+    "312": 313,
+    "314": 313,
+    "315": 313,
+    "316": 313
   },
   "cola": [],
   "extras": {}
