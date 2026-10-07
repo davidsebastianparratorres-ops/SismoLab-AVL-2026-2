@@ -1,0 +1,158 @@
+[
+  {
+    "event_id": 110,
+    "magnitude": 4.0,
+    "depth": 20.0,
+    "epicenter": {
+      "x": 250.0,
+      "y": 120.0
+    },
+    "ocurredAt": "2026-09-07T09:30:00Z",
+    "revision": 1,
+    "station": "EST-02"
+  },
+  {
+    "event_id": 111,
+    "magnitude": 5.2,
+    "depth": 25.0,
+    "epicenter": {
+      "x": 550.0,
+      "y": 150.0
+    },
+    "ocurredAt": "2026-09-07T10:30:00Z",
+    "revision": 3,
+    "station": "EST-03"
+  },
+  {
+    "event_id": 101,
+    "magnitude": 5.0,
+    "depth": 15.0,
+    "epicenter": {
+      "x": 200.0,
+      "y": 300.0
+    },
+    "ocurredAt": "2026-09-07T10:00:00Z",
+    "revision": 2,
+    "station": "EST-03"
+  },
+  {
+    "event_id": 101,
+    "magnitude": 5.0,
+    "depth": 15.0,
+    "epicenter": {
+      "x": 200.0,
+      "y": 300.0
+    },
+    "ocurredAt": "2026-09-07T10:00:00Z",
+    "revision": 2,
+    "station": "EST-03"
+  },
+  {
+    "event_id": 101,
+    "magnitude": 5.0,
+    "depth": 15.0,
+    "epicenter": {
+      "x": 200.0,
+      "y": 300.0
+    },
+    "ocurredAt": "2026-09-07T10:00:00Z",
+    "revision": 1,
+    "station": "EST-04"
+  },
+  {
+    "event_id": 102,
+    "magnitude": 6.2,
+    "depth": 15.0,
+    "epicenter": {
+      "x": 400.0,
+      "y": 200.0
+    },
+    "ocurredAt": "2026-09-07T09:00:00Z",
+    "revision": 2,
+    "station": "EST-04"
+  },
+  {
+    "event_id": 103,
+    "magnitude": 3.6,
+    "depth": 10.0,
+    "epicenter": {
+      "x": 300.0,
+      "y": 150.0
+    },
+    "ocurredAt": "2026-09-07T08:00:00Z",
+    "revision": 1,
+    "station": "EST-05"
+  },
+  {
+    "event_id": 301,
+    "magnitude": 2.0,
+    "depth": 10.0,
+    "epicenter": {
+      "x": 300.0,
+      "y": 100.0
+    },
+    "ocurredAt": "2026-09-07T07:00:00Z",
+    "revision": 4,
+    "station": "EST-01"
+  },
+  {
+    "event_id": 201,
+    "magnitude": 3.0,
+    "depth": 10.0,
+    "epicenter": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "ocurredAt": "2026-09-02T12:00:00Z",
+    "revision": 1,
+    "station": "EST-03"
+  },
+  {
+    "event_id": 202,
+    "magnitude": 3.2,
+    "depth": 10.0,
+    "epicenter": {
+      "x": 110.0,
+      "y": 100.0
+    },
+    "ocurredAt": "2026-09-02T11:50:00Z",
+    "revision": 1,
+    "station": "EST-04"
+  },
+  {
+    "event_id": 201,
+    "magnitude": 3.4,
+    "depth": 12.0,
+    "epicenter": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "ocurredAt": "2026-09-02T12:00:00Z",
+    "revision": 2,
+    "station": "EST-02"
+  },
+  {
+    "event_id": 112,
+    "magnitude": 3.0,
+    "depth": 10.0,
+    "epicenter": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "ocurredAt": "2026-09-07T10:00:00Z",
+    "revision": 1,
+    "station": "EST-99"
+  },
+  {
+    "event_id": 113,
+    "magnitude": 10.5,
+    "depth": 10.0,
+    "epicenter": {
+      "x": 100.0,
+      "y": 100.0
+    },
+    "ocurredAt": "2026-09-07T10:00:00Z",
+    "revision": 1,
+    "station": "EST-01"
+  }
+]
